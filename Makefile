@@ -6,4 +6,7 @@ build:
 clean:
 	$(RM) -r bin
 
+test:
+	go test ./...
+
 .PHONY: all build clean
