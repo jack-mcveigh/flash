@@ -58,7 +58,7 @@ func TestAddSingleCard(t *testing.T) {
 	}
 }
 
-func TestAddMultipleCard(t *testing.T) {
+func TestAddMultipleCards(t *testing.T) {
 	tests := []struct {
 		name  string
 		cards []Card
