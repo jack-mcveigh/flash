@@ -1,7 +1,6 @@
 package adding
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -52,8 +51,6 @@ func TestAddSingleCard(t *testing.T) {
 				}
 			}
 
-			fmt.Println(tt.want)
-			fmt.Println(repo.cards)
 			if !reflect.DeepEqual(tt.want, repo.cards) {
 				t.Errorf("Incorrect repo.cards. Want %v, got %v", tt.want, repo.cards)
 			}
