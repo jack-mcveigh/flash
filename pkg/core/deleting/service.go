@@ -1,11 +1,11 @@
 package deleting
 
 type Service interface {
-	DeleteCard(Card)
+	DeleteCard(Card) error
 }
 
 type Repository interface {
-	DeleteCard(Card)
+	DeleteCard(Card) error
 }
 
 type service struct {
@@ -16,6 +16,6 @@ func NewService(r Repository) *service {
 	return &service{r}
 }
 
-func (s *service) DeleteCard(c Card) {
-	s.r.DeleteCard(c)
+func (s *service) DeleteCard(c Card) error {
+	return s.r.DeleteCard(c)
 }
