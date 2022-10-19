@@ -1,6 +1,6 @@
-package deleting
+package viewing
 
 type Card struct {
 	Title string
-	Desc  int
+	Desc  string
 }
