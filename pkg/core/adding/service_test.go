@@ -44,7 +44,7 @@ func TestAddSingleCard(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &repositoryStub{}
-			as := NewService(repo)
+			as := New(repo)
 			if err := as.AddCard(tt.card); err != nil {
 				if tt.wantErr != err {
 					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
@@ -90,7 +90,7 @@ func TestAddMultipleCards(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &repositoryStub{}
-			as := NewService(repo)
+			as := New(repo)
 
 			for _, card := range tt.cards {
 				as.AddCard(card)

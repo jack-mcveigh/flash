@@ -69,7 +69,7 @@ func TestDeleteCard(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := newRepositoryStub()
-			ds := NewService(repo)
+			ds := New(repo)
 			if err := ds.DeleteCard(tt.card); err != nil {
 				if tt.wantErr != err {
 					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)

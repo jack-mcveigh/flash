@@ -42,7 +42,7 @@ func TestGetCards(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &repositoryStub{}
 			repo.cards = tt.want
-			gs := NewService(repo)
+			gs := New(repo)
 			got := gs.GetCards()
 
 			if !reflect.DeepEqual(tt.want, got) {
