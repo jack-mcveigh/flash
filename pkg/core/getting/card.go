@@ -1,4 +1,4 @@
-package viewing
+package getting
 
 type Card struct {
 	Title string
