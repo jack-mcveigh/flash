@@ -10,11 +10,11 @@ type Service interface {
 }
 
 type service struct {
-	adder   *adding.Service
-	deleter *deleting.Service
-	getter  *getting.Service
+	adder   adding.Service
+	deleter deleting.Service
+	getter  getting.Service
 }
 
-func NewService(a *adding.Service, d *deleting.Service, g *getting.Service) *service {
+func New(a adding.Service, d deleting.Service, g getting.Service) *service {
 	return &service{a, d, g}
 }
