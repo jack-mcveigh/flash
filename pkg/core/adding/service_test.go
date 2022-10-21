@@ -14,7 +14,7 @@ func (r *repositoryStub) AddCard(c Card) error {
 	return nil
 }
 
-func TestAddSingleCard(t *testing.T) {
+func TestAddCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
 		card    Card
@@ -58,7 +58,7 @@ func TestAddSingleCard(t *testing.T) {
 	}
 }
 
-func TestAddMultipleCards(t *testing.T) {
+func TestAddCardMultiple(t *testing.T) {
 	tests := []struct {
 		name  string
 		cards []Card
