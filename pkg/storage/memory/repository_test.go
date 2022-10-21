@@ -212,7 +212,7 @@ func TestGetCards(t *testing.T) {
 			cards := r.GetCards()
 
 			if !reflect.DeepEqual(tt.want, cards) {
-				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, r.cards)
+				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, cards)
 			}
 		})
 	}
