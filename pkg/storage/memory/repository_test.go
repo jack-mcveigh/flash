@@ -44,7 +44,7 @@ func TestAddCardSingle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository()
+			r := New()
 			if err := r.AddCard(tt.card); err != nil {
 				if tt.wantErr != err {
 					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
@@ -77,7 +77,7 @@ func TestAddCardMultiple(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository()
+			r := New()
 			for _, c := range tt.want {
 				r.AddCard(adding.Card{Title: c.Title, Desc: c.Desc})
 			}
@@ -128,7 +128,7 @@ func TestDeleteCardSingle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository()
+			r := New()
 			r.cards = []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
@@ -166,7 +166,7 @@ func TestDeleteCardMultiple(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository()
+			r := New()
 			for _, c := range tt.cards {
 				r.cards = append(r.cards, Card{Title: c.Title, Desc: ""})
 			}
@@ -205,7 +205,7 @@ func TestGetCards(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository()
+			r := New()
 			for _, c := range tt.want {
 				r.cards = append(r.cards, Card{Title: c.Title, Desc: c.Desc})
 			}

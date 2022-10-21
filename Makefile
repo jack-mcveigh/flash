@@ -11,6 +11,6 @@ coverage-report:
 	go tool cover -html=cover.out
 
 test:
-	go test -v -cover ./...
+	go test -v -cover ./pkg/...
 
 .PHONY: all build clean

@@ -14,7 +14,7 @@ type Repository struct {
 	cards []Card
 }
 
-func NewRepository() *Repository {
+func New() *Repository {
 	return &Repository{}
 }
 
