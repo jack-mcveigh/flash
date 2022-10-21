@@ -19,7 +19,7 @@ func main() {
 
 	app := cli.New(a, d, g)
 
-	if err := app.App.Run(os.Args); err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 }
