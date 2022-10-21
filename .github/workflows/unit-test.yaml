@@ -1,15 +1,21 @@
-name: Go
+name: Flash CI
 on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  unit-test:
+    name: Run Unit Tests
+
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v3
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
           go-version: '1.19'
-      - name: Test Flash
+      - name: Get Source Code
+        uses: actions/checkout@v3
+      - name: Test
         run: make test
