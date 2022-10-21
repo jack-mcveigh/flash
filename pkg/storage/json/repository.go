@@ -3,6 +3,8 @@ package json
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -27,11 +29,21 @@ func New() (*Repository, error) {
 }
 
 func (r *Repository) AddCard(c adding.Card) error {
+	card := Card{
+		Title: c.Title,
+		Desc:  c.Desc,
+	}
+
+	if err := r.db.Write(CardCollection, card.Title, card); err != nil {
+		// TODO: Add error handling
+		return err
+	}
 	return nil
 }
 
 func (r *Repository) DeleteCard(c deleting.Card) error {
-	return nil
+	p := fmt.Sprintf("%s/%s/%s.json", dataPath, CardCollection, c.Title)
+	return os.Remove(p)
 }
 
 func (r *Repository) GetCards() []getting.Card {
