@@ -11,8 +11,7 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/updating"
 )
 
-type clockStub struct {
-}
+type clockStub struct{}
 
 func (c *clockStub) Now() time.Time {
 	return time.Time{}
