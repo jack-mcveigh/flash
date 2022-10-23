@@ -44,13 +44,14 @@ func (r *repository) AddCard(c adding.Card) error {
 		}
 	}
 
+	t := r.clock.Now()
 	r.cards = append(
 		r.cards,
 		Card{
 			Title:   c.Title,
 			Desc:    c.Desc,
-			Created: r.clock.Now(),
-			Updated: r.clock.Now(),
+			Created: t,
+			Updated: t,
 		},
 	)
 	return nil
