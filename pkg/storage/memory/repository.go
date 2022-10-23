@@ -42,7 +42,7 @@ func (r *Repository) DeleteCard(c deleting.Card) error {
 	return nil
 }
 
-func (r *Repository) GetCards() []getting.Card {
+func (r *Repository) GetCards() ([]getting.Card, error) {
 	var cards []getting.Card
 	for _, c := range r.cards {
 		cards = append(cards, getting.Card{
@@ -50,5 +50,5 @@ func (r *Repository) GetCards() []getting.Card {
 			Desc:  c.Desc,
 		})
 	}
-	return cards
+	return cards, nil
 }

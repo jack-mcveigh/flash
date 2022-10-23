@@ -182,14 +182,16 @@ func TestDeleteCardMultiple(t *testing.T) {
 
 func TestGetCards(t *testing.T) {
 	tests := []struct {
-		name string
-		want []getting.Card
+		name    string
+		want    []getting.Card
+		wantErr error
 	}{
 		{
 			name: "Single Card",
 			want: []getting.Card{
 				{Title: "Subject1", Desc: "Value1"},
 			},
+			wantErr: nil,
 		},
 		{
 			name: "Multiple Cards",
@@ -198,6 +200,7 @@ func TestGetCards(t *testing.T) {
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			},
+			wantErr: nil,
 		},
 	}
 
@@ -207,7 +210,10 @@ func TestGetCards(t *testing.T) {
 			for _, c := range tt.want {
 				r.cards = append(r.cards, Card{Title: c.Title, Desc: c.Desc})
 			}
-			cards := r.GetCards()
+			cards, err := r.GetCards()
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
+			}
 
 			if !reflect.DeepEqual(tt.want, cards) {
 				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, cards)
