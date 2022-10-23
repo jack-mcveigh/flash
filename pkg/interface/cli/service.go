@@ -105,7 +105,7 @@ func deleteCard(ctx *cli.Context, d deleting.Service) error {
 }
 
 func getCards(ctx *cli.Context, g getting.Service) error {
-	cards := g.GetCards()
+	cards, _ := g.GetCards()
 	for i, c := range cards {
 		fmt.Printf("\t%d) %s -> %s\n", i, c.Title, c.Desc)
 	}

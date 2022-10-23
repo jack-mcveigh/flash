@@ -250,7 +250,7 @@ func TestGetCards(t *testing.T) {
 			for _, c := range tt.want {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: c.Desc})
 			}
-			cards := r.GetCards()
+			cards, _ := r.GetCards()
 
 			if !reflect.DeepEqual(tt.want, cards) {
 				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, cards)

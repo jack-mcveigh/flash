@@ -9,8 +9,8 @@ type repositoryStub struct {
 	cards []Card
 }
 
-func (r *repositoryStub) GetCards() []Card {
-	return r.cards
+func (r *repositoryStub) GetCards() ([]Card, error) {
+	return r.cards, nil
 }
 
 func TestGetCards(t *testing.T) {
@@ -43,7 +43,7 @@ func TestGetCards(t *testing.T) {
 			repo := &repositoryStub{}
 			repo.cards = tt.want
 			gs := New(repo)
-			got := gs.GetCards()
+			got, _ := gs.GetCards()
 
 			if !reflect.DeepEqual(tt.want, got) {
 				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, got)

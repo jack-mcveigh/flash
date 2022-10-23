@@ -41,34 +41,28 @@ func (r *Repository) AddCard(c adding.Card) error {
 		Desc:  c.Desc,
 	}
 
-	if err := r.db.Write(cardCollection, card.Title, card); err != nil {
-		// TODO: Add error handling
-		return err
-	}
-	return nil
+	err := r.db.Write(cardCollection, card.Title, card)
+	return err
 }
 
 func (r *Repository) DeleteCard(c deleting.Card) error {
-	// TODO: Add error handling
 	return r.db.Delete(cardCollection, c.Title)
 }
 
-func (r *Repository) GetCards() []getting.Card {
+func (r *Repository) GetCards() ([]getting.Card, error) {
 	cards := []getting.Card{}
 	records, err := r.db.ReadAll(cardCollection)
 	if err != nil {
-		// TODO: Add error handling
-		return cards
+		return cards, err
 	}
 
 	for _, r := range records {
 		var c Card
 		if err := json.Unmarshal([]byte(r), &c); err != nil {
-			// TODO: Add error handling
-			return cards
+			return cards, err
 		}
 
 		cards = append(cards, getting.Card{Title: c.Title, Desc: c.Desc})
 	}
-	return cards
+	return cards, nil
 }
