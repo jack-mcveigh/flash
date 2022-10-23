@@ -3,12 +3,19 @@ package memory
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
 )
+
+type clockStub struct{}
+
+func (c *clockStub) Now() time.Time {
+	return time.Time{}
+}
 
 func TestAddCardSingle(t *testing.T) {
 	tests := []struct {
@@ -39,8 +46,10 @@ func TestAddCardSingle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			err := r.AddCard(tt.card)
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
@@ -86,7 +95,8 @@ func TestAddCardMultiple(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			var err error
 			for _, c := range tt.cards {
 				err = r.AddCard(c)
@@ -142,7 +152,8 @@ func TestDeleteCardSingle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			r.cards = []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
@@ -188,7 +199,8 @@ func TestDeleteCardMultiple(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			r.cards = []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
@@ -230,11 +242,13 @@ func TestGetCards(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			for _, c := range tt.want {
 				r.cards = append(r.cards, Card{Title: c.Title, Desc: c.Desc})
 			}
 			cards, err := r.GetCards()
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
@@ -275,9 +289,11 @@ func TestUpdateCardSingle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			r.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
 			err := r.UpdateCard(tt.card)
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
@@ -321,7 +337,8 @@ func TestUpdateCardMultiple(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := New()
+			r := &repository{}
+			r.clock = &clockStub{}
 			r.cards = []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},

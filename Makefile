@@ -1,5 +1,8 @@
 all: build
 
+install:
+	go install ./cmd/...
+
 build:
 	go build -o bin/ ./cmd/...
 
