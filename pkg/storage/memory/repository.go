@@ -2,6 +2,7 @@ package memory
 
 import (
 	"errors"
+	"time"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -14,15 +15,29 @@ var (
 	ErrCardNotFound      = errors.New("Card not found")
 )
 
-type Repository struct {
+type Clock interface {
+	Now() time.Time
+}
+
+type clock struct {
+}
+
+func (c *clock) Now() time.Time {
+	return time.Now()
+}
+
+type repository struct {
 	cards []Card
+	clock Clock
 }
 
-func New() *Repository {
-	return &Repository{}
+func New() *repository {
+	r := &repository{}
+	r.clock = &clock{}
+	return r
 }
 
-func (r *Repository) AddCard(c adding.Card) error {
+func (r *repository) AddCard(c adding.Card) error {
 	for _, card := range r.cards {
 		if card.Title == c.Title {
 			return ErrCardAlreadyExists
@@ -31,12 +46,17 @@ func (r *Repository) AddCard(c adding.Card) error {
 
 	r.cards = append(
 		r.cards,
-		Card{Title: c.Title, Desc: c.Desc},
+		Card{
+			Title:   c.Title,
+			Desc:    c.Desc,
+			Created: r.clock.Now(),
+			Updated: r.clock.Now(),
+		},
 	)
 	return nil
 }
 
-func (r *Repository) DeleteCard(c deleting.Card) error {
+func (r *repository) DeleteCard(c deleting.Card) error {
 	index := -1
 	for i, card := range r.cards {
 		if c.Title == card.Title {
@@ -52,7 +72,7 @@ func (r *Repository) DeleteCard(c deleting.Card) error {
 	return nil
 }
 
-func (r *Repository) GetCards() ([]getting.Card, error) {
+func (r *repository) GetCards() ([]getting.Card, error) {
 	var cards []getting.Card
 	for _, c := range r.cards {
 		cards = append(cards, getting.Card{
@@ -63,10 +83,11 @@ func (r *Repository) GetCards() ([]getting.Card, error) {
 	return cards, nil
 }
 
-func (r *Repository) UpdateCard(c updating.Card) error {
+func (r *repository) UpdateCard(c updating.Card) error {
 	for i := range r.cards {
 		if r.cards[i].Title == c.Title {
 			r.cards[i].Desc = c.Desc
+			r.cards[i].Updated = r.clock.Now()
 			return nil
 		}
 	}
