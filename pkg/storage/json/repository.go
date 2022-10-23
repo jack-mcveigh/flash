@@ -13,8 +13,12 @@ import (
 
 const cardCollection = "card"
 
-var dataPath = "/tmp/.flash"
-var ErrCardNotFound error = errors.New("Card not found")
+var (
+	dataPath = "/tmp/.flash"
+
+	ErrCardAlreadyExists = errors.New("Card already exists")
+	ErrCardNotFound      = errors.New("Card not found")
+)
 
 type dbDriver interface {
 	Write(string, string, any) error
@@ -36,6 +40,13 @@ func New() (*Repository, error) {
 }
 
 func (r *Repository) AddCard(c adding.Card) error {
+	cards, _ := r.GetCards()
+	for _, card := range cards {
+		if card.Title == c.Title {
+			return ErrCardAlreadyExists
+		}
+	}
+
 	card := Card{
 		Title: c.Title,
 		Desc:  c.Desc,

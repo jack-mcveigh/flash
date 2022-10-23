@@ -8,7 +8,10 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 )
 
-var ErrCardNotFound error = errors.New("Card not found")
+var (
+	ErrCardAlreadyExists = errors.New("Card already exists")
+	ErrCardNotFound      = errors.New("Card not found")
+)
 
 type Repository struct {
 	cards []Card
@@ -19,6 +22,12 @@ func New() *Repository {
 }
 
 func (r *Repository) AddCard(c adding.Card) error {
+	for _, card := range r.cards {
+		if card.Title == c.Title {
+			return ErrCardAlreadyExists
+		}
+	}
+
 	r.cards = append(
 		r.cards,
 		Card{Title: c.Title, Desc: c.Desc},

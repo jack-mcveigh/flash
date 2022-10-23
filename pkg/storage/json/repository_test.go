@@ -105,11 +105,26 @@ func TestAddCardMultiple(t *testing.T) {
 	}{
 		{
 			name: "Normal",
+			cards: []adding.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+			},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Subject3", Desc: "Value3"},
 			},
+			wantErr: nil,
+		},
+		{
+			name: "Duplicate Title",
+			cards: []adding.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject1", Desc: "Value2"},
+			},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+			},
+			wantErr: ErrCardAlreadyExists,
 		},
 	}
 
@@ -117,8 +132,13 @@ func TestAddCardMultiple(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
 			r := &Repository{db}
-			for _, c := range tt.want {
-				r.AddCard(adding.Card{Title: c.Title, Desc: c.Desc})
+			var err error
+			for _, c := range tt.cards {
+				err = r.AddCard(adding.Card{Title: c.Title, Desc: c.Desc})
+			}
+
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, db.cards) {
