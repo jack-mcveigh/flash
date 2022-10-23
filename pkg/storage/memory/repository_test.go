@@ -45,10 +45,9 @@ func TestAddCardSingle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := New()
-			if err := r.AddCard(tt.card); err != nil {
-				if tt.wantErr != err {
-					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
-				}
+			err := r.AddCard(tt.card)
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, r.cards) {
@@ -134,10 +133,9 @@ func TestDeleteCardSingle(t *testing.T) {
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			}
-			if err := r.DeleteCard(tt.card); err != nil {
-				if tt.wantErr != err {
-					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
-				}
+			err := r.DeleteCard(tt.card)
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, r.cards) {

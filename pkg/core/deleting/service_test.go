@@ -70,10 +70,9 @@ func TestDeleteCard(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := NewStub()
 			ds := New(repo)
-			if err := ds.DeleteCard(tt.card); err != nil {
-				if tt.wantErr != err {
-					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
-				}
+			err := ds.DeleteCard(tt.card)
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, repo.cards) {

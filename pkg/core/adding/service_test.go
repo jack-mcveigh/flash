@@ -45,10 +45,9 @@ func TestAddCardSingle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &repositoryStub{}
 			as := New(repo)
-			if err := as.AddCard(tt.card); err != nil {
-				if tt.wantErr != err {
-					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
-				}
+			err := as.AddCard(tt.card)
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, repo.cards) {

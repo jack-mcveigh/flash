@@ -41,9 +41,10 @@ func (d *dbDriverStub) Delete(collection string, resource string) error {
 	for i, c := range d.cards {
 		if c.Title == resource {
 			d.cards = append(d.cards[:i], d.cards[i+1:]...)
+			return nil
 		}
 	}
-	return nil
+	return ErrCardNotFound
 }
 
 func TestAddCardSingle(t *testing.T) {
@@ -83,10 +84,9 @@ func TestAddCardSingle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
 			r := &Repository{db}
-			if err := r.AddCard(tt.card); err != nil {
-				if tt.wantErr != err {
-					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
-				}
+			err := r.AddCard(tt.card)
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, db.cards) {
@@ -174,10 +174,9 @@ func TestDeleteCardSingle(t *testing.T) {
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			}
-			if err := r.DeleteCard(tt.card); err != nil {
-				if tt.wantErr != err {
-					t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
-				}
+			err := r.DeleteCard(tt.card)
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, db.cards) {
