@@ -6,6 +6,7 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
+	"github.com/jmcveigh55/flash/pkg/core/updating"
 )
 
 var (
@@ -60,4 +61,14 @@ func (r *Repository) GetCards() ([]getting.Card, error) {
 		})
 	}
 	return cards, nil
+}
+
+func (r *Repository) UpdateCard(c updating.Card) error {
+	for i := range r.cards {
+		if r.cards[i].Title == c.Title {
+			r.cards[i].Desc = c.Desc
+			return nil
+		}
+	}
+	return ErrCardNotFound
 }
