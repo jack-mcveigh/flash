@@ -34,7 +34,7 @@ func (r *Repository) DeleteCard(c deleting.Card) error {
 		}
 	}
 
-	if index < 0 {
+	if index == -1 {
 		return ErrCardNotFound
 	}
 
