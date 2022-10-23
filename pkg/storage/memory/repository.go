@@ -2,12 +2,12 @@ package memory
 
 import (
 	"errors"
-	"time"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
+	"github.com/jmcveigh55/flash/pkg/storage"
 )
 
 var (
@@ -15,24 +15,14 @@ var (
 	ErrCardNotFound      = errors.New("Card not found")
 )
 
-type Clock interface {
-	Now() time.Time
-}
-
-type clock struct{}
-
-func (c *clock) Now() time.Time {
-	return time.Now()
-}
-
 type repository struct {
 	cards []Card
-	clock Clock
+	clock storage.Clock
 }
 
 func New() *repository {
 	r := &repository{}
-	r.clock = &clock{}
+	r.clock = storage.NewClock()
 	return r
 }
 

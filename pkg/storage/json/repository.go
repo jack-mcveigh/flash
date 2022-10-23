@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"os/user"
-	"time"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
+	"github.com/jmcveigh55/flash/pkg/storage"
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 
@@ -22,16 +22,6 @@ var (
 	ErrCardNotFound      = errors.New("Card not found")
 )
 
-type Clock interface {
-	Now() time.Time
-}
-
-type clock struct{}
-
-func (c *clock) Now() time.Time {
-	return time.Now()
-}
-
 type dbDriver interface {
 	Write(string, string, any) error
 	ReadAll(string) ([]string, error)
@@ -40,7 +30,7 @@ type dbDriver interface {
 
 type repository struct {
 	db    dbDriver
-	clock Clock
+	clock storage.Clock
 }
 
 func New() (*repository, error) {
@@ -49,7 +39,8 @@ func New() (*repository, error) {
 		dataPath = usr.HomeDir + "/.flash"
 	}
 	db, err := scribble.New(dataPath, nil)
-	return &repository{db, &clock{}}, err
+	c := storage.NewClock()
+	return &repository{db, c}, err
 }
 
 func (r *repository) AddCard(c adding.Card) error {
