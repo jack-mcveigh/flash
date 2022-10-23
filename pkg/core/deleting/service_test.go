@@ -9,7 +9,7 @@ type repositoryStub struct {
 	cards []Card
 }
 
-func NewStub() *repositoryStub {
+func NewStubWithData() *repositoryStub {
 	r := &repositoryStub{}
 	r.cards = []Card{
 		{Title: "Subject1"},
@@ -65,7 +65,7 @@ func TestDeleteCard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := NewStub()
+			repo := NewStubWithData()
 			ds := New(repo)
 			err := ds.DeleteCard(tt.card)
 			if err != tt.wantErr {
