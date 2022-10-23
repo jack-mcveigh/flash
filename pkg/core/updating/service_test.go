@@ -9,12 +9,6 @@ type repositoryStub struct {
 	cards []Card
 }
 
-func NewStubWithData() *repositoryStub {
-	r := &repositoryStub{}
-	r.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
-	return r
-}
-
 func (r *repositoryStub) UpdateCard(c Card) error {
 	for i := range r.cards {
 		if r.cards[i].Title == c.Title {
@@ -60,7 +54,8 @@ func TestUpdateCard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := NewStubWithData()
+			repo := &repositoryStub{}
+			repo.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
 			us := New(repo)
 			err := us.UpdateCard(tt.card)
 			if err != tt.wantErr {
