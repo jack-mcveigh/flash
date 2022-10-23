@@ -1,5 +1,9 @@
 package deleting
 
+import "errors"
+
+var ErrCardNotFound error = errors.New("Card not found")
+
 type Service interface {
 	DeleteCard(Card) error
 }

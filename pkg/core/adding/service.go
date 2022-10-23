@@ -2,7 +2,7 @@ package adding
 
 import "errors"
 
-var ErrEmptyTitle error = errors.New("")
+var ErrCardEmptyTitle error = errors.New("Card has an empty title")
 
 type Service interface {
 	AddCard(Card) error
@@ -22,7 +22,7 @@ func New(r Repository) *service {
 
 func (s *service) AddCard(c Card) error {
 	if c.Title == "" {
-		return ErrEmptyTitle
+		return ErrCardEmptyTitle
 	}
 	return s.r.AddCard(c)
 }

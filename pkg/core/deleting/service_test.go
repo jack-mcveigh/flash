@@ -1,12 +1,9 @@
 package deleting
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 )
-
-var errCardNotFound error = errors.New("Card not found")
 
 type repositoryStub struct {
 	cards []Card
@@ -31,7 +28,7 @@ func (r *repositoryStub) DeleteCard(c Card) error {
 	}
 
 	if index < 0 {
-		return errCardNotFound
+		return ErrCardNotFound
 	}
 
 	r.cards = append(r.cards[:index], r.cards[index+1:]...)
@@ -62,7 +59,7 @@ func TestDeleteCard(t *testing.T) {
 				{Title: "Subject2"},
 				{Title: "Subject3"},
 			},
-			wantErr: errCardNotFound,
+			wantErr: ErrCardNotFound,
 		},
 	}
 

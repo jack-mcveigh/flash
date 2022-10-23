@@ -37,7 +37,7 @@ func TestAddCardSingle(t *testing.T) {
 			name:    "Empty Title",
 			card:    Card{Title: "", Desc: "Value"},
 			want:    nil,
-			wantErr: ErrEmptyTitle,
+			wantErr: ErrCardEmptyTitle,
 		},
 	}
 
