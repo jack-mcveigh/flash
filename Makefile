@@ -4,7 +4,7 @@ build:
 	go build -o bin/ ./cmd/...
 
 clean:
-	$(RM) -r bin *.out
+	$(RM) -r bin *.out ~/.flash
 
 coverage-report:
 	go test -coverprofile cover.out ./...

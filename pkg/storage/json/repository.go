@@ -3,6 +3,7 @@ package json
 import (
 	"encoding/json"
 	"errors"
+	"os/user"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -10,11 +11,9 @@ import (
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 
-const (
-	cardCollection = "card"
-	dataPath       = "/tmp/flash"
-)
+const cardCollection = "card"
 
+var dataPath = "/tmp/.flash"
 var ErrCardNotFound error = errors.New("Card not found")
 
 type dbDriver interface {
@@ -28,6 +27,10 @@ type Repository struct {
 }
 
 func New() (*Repository, error) {
+	usr, err := user.Current()
+	if err == nil {
+		dataPath = usr.HomeDir + "/.flash"
+	}
 	db, err := scribble.New(dataPath, nil)
 	return &Repository{db}, err
 }
