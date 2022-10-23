@@ -29,10 +29,10 @@ func (r *Repository) AddCard(c adding.Card) error {
 		}
 	}
 
-	r.cards = append(
-		r.cards,
-		Card{Title: c.Title, Desc: c.Desc},
-	)
+	// r.cards = append(
+	// 	r.cards,
+	// 	Card{Title: c.Title, Desc: c.Desc},
+	// )
 	return nil
 }
 
