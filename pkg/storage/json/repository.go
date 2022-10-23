@@ -38,21 +38,21 @@ type dbDriver interface {
 	Delete(string, string) error
 }
 
-type Repository struct {
+type repository struct {
 	db    dbDriver
 	clock Clock
 }
 
-func New() (*Repository, error) {
+func New() (*repository, error) {
 	usr, err := user.Current()
 	if err == nil {
 		dataPath = usr.HomeDir + "/.flash"
 	}
 	db, err := scribble.New(dataPath, nil)
-	return &Repository{db, &clock{}}, err
+	return &repository{db, &clock{}}, err
 }
 
-func (r *Repository) AddCard(c adding.Card) error {
+func (r *repository) AddCard(c adding.Card) error {
 	cards, _ := r.GetCards()
 	for _, card := range cards {
 		if card.Title == c.Title {
@@ -72,7 +72,7 @@ func (r *Repository) AddCard(c adding.Card) error {
 	return err
 }
 
-func (r *Repository) DeleteCard(c deleting.Card) error {
+func (r *repository) DeleteCard(c deleting.Card) error {
 	cards, _ := r.GetCards()
 
 	index := -1
@@ -89,7 +89,7 @@ func (r *Repository) DeleteCard(c deleting.Card) error {
 	return r.db.Delete(cardCollection, c.Title)
 }
 
-func (r *Repository) getCards() ([]Card, error) {
+func (r *repository) getCards() ([]Card, error) {
 	cards := []Card{}
 	records, err := r.db.ReadAll(cardCollection)
 	if err != nil {
@@ -107,7 +107,7 @@ func (r *Repository) getCards() ([]Card, error) {
 	return cards, nil
 }
 
-func (r *Repository) GetCards() ([]getting.Card, error) {
+func (r *repository) GetCards() ([]getting.Card, error) {
 	cards := []getting.Card{}
 	cs, err := r.getCards()
 	if err != nil {
@@ -120,7 +120,7 @@ func (r *Repository) GetCards() ([]getting.Card, error) {
 	return cards, nil
 }
 
-func (r *Repository) UpdateCard(c updating.Card) error {
+func (r *repository) UpdateCard(c updating.Card) error {
 	cards, _ := r.getCards()
 
 	for _, card := range cards {

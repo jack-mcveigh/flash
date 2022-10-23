@@ -97,7 +97,7 @@ func TestAddCardSingle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db, &clockStub{}}
+			r := &repository{db, &clockStub{}}
 			err := r.AddCard(tt.card)
 
 			if err != tt.wantErr {
@@ -146,7 +146,7 @@ func TestAddCardMultiple(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db, &clockStub{}}
+			r := &repository{db, &clockStub{}}
 			var err error
 			for _, c := range tt.cards {
 				err = r.AddCard(adding.Card{Title: c.Title, Desc: c.Desc})
@@ -208,7 +208,7 @@ func TestDeleteCardSingle(t *testing.T) {
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			}
-			r := &Repository{db, &clockStub{}}
+			r := &repository{db, &clockStub{}}
 			err := r.DeleteCard(tt.card)
 
 			if err != tt.wantErr {
@@ -245,7 +245,7 @@ func TestDeleteCardMultiple(t *testing.T) {
 			for _, c := range tt.cards {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: ""})
 			}
-			r := &Repository{db, &clockStub{}}
+			r := &repository{db, &clockStub{}}
 			for _, c := range tt.cards {
 				r.DeleteCard(c)
 			}
@@ -287,7 +287,7 @@ func TestGetCards(t *testing.T) {
 			for _, c := range tt.want {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: c.Desc})
 			}
-			r := &Repository{db, &clockStub{}}
+			r := &repository{db, &clockStub{}}
 			cards, err := r.GetCards()
 
 			if err != tt.wantErr {
@@ -332,7 +332,7 @@ func TestUpdateCardSingle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
 			db.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
-			r := &Repository{db, &clockStub{}}
+			r := &repository{db, &clockStub{}}
 			err := r.UpdateCard(tt.card)
 
 			if err != tt.wantErr {
