@@ -46,6 +46,19 @@ func (r *Repository) AddCard(c adding.Card) error {
 }
 
 func (r *Repository) DeleteCard(c deleting.Card) error {
+	cards, _ := r.GetCards()
+
+	index := -1
+	for i, card := range cards {
+		if c.Title == card.Title {
+			index = i
+		}
+	}
+
+	if index < 0 {
+		return ErrCardNotFound
+	}
+
 	return r.db.Delete(cardCollection, c.Title)
 }
 

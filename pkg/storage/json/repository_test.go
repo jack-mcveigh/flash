@@ -44,7 +44,7 @@ func (d *dbDriverStub) Delete(collection string, resource string) error {
 			return nil
 		}
 	}
-	return ErrCardNotFound
+	return errors.New("Resource not found")
 }
 
 func TestAddCardSingle(t *testing.T) {
