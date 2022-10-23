@@ -6,6 +6,7 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
+	"github.com/jmcveigh55/flash/pkg/core/updating"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,13 +18,15 @@ type service struct {
 	app *cli.App
 }
 
-func New(a adding.Service, d deleting.Service, g getting.Service) *service {
+func New(a adding.Service, d deleting.Service, g getting.Service, u updating.Service) *service {
 	return &service{
 		app: &cli.App{
-			Name:     "Flash",
-			Usage:    "a cli flashcard app",
-			Flags:    []cli.Flag{},
-			Commands: []*cli.Command{addCmd(a), deleteCmd(d), getCmd(g)},
+			Name:  "Flash",
+			Usage: "a cli flashcard app",
+			Flags: []cli.Flag{},
+			Commands: []*cli.Command{
+				addCmd(a), deleteCmd(d), getCmd(g), updateCmd(u),
+			},
 		},
 	}
 }
@@ -87,6 +90,31 @@ func getCmd(g getting.Service) *cli.Command {
 	}
 }
 
+func updateCmd(u updating.Service) *cli.Command {
+	return &cli.Command{
+		Name:    "update",
+		Aliases: []string{"u"},
+		Usage:   "Update a flashcard's description",
+		Action: func(ctx *cli.Context) error {
+			return updateCard(ctx, u)
+		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "title",
+				Aliases:  []string{"t"},
+				Usage:    "Flashcard's title",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "description",
+				Aliases:  []string{"d"},
+				Usage:    "Flashcard's Description",
+				Required: true,
+			},
+		},
+	}
+}
+
 func addCard(ctx *cli.Context, a adding.Service) error {
 	return a.AddCard(
 		adding.Card{
@@ -110,4 +138,13 @@ func getCards(ctx *cli.Context, g getting.Service) error {
 		fmt.Printf("\t%d) %s -> %s\n", i, c.Title, c.Desc)
 	}
 	return nil
+}
+
+func updateCard(ctx *cli.Context, u updating.Service) error {
+	return u.UpdateCard(
+		updating.Card{
+			Title: ctx.String("t"),
+			Desc:  ctx.String("d"),
+		},
+	)
 }
