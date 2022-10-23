@@ -5,12 +5,20 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
 )
+
+type clockStub struct {
+}
+
+func (c *clockStub) Now() time.Time {
+	return time.Time{}
+}
 
 type dbDriverStub struct {
 	cards []Card
@@ -90,7 +98,7 @@ func TestAddCardSingle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db}
+			r := &Repository{db, &clockStub{}}
 			err := r.AddCard(tt.card)
 
 			if err != tt.wantErr {
@@ -139,7 +147,7 @@ func TestAddCardMultiple(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db}
+			r := &Repository{db, &clockStub{}}
 			var err error
 			for _, c := range tt.cards {
 				err = r.AddCard(adding.Card{Title: c.Title, Desc: c.Desc})
@@ -201,7 +209,7 @@ func TestDeleteCardSingle(t *testing.T) {
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			}
-			r := &Repository{db}
+			r := &Repository{db, &clockStub{}}
 			err := r.DeleteCard(tt.card)
 
 			if err != tt.wantErr {
@@ -238,7 +246,7 @@ func TestDeleteCardMultiple(t *testing.T) {
 			for _, c := range tt.cards {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: ""})
 			}
-			r := &Repository{db}
+			r := &Repository{db, &clockStub{}}
 			for _, c := range tt.cards {
 				r.DeleteCard(c)
 			}
@@ -280,7 +288,7 @@ func TestGetCards(t *testing.T) {
 			for _, c := range tt.want {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: c.Desc})
 			}
-			r := &Repository{db}
+			r := &Repository{db, &clockStub{}}
 			cards, err := r.GetCards()
 
 			if err != tt.wantErr {
@@ -325,7 +333,7 @@ func TestUpdateCardSingle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
 			db.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
-			r := &Repository{db}
+			r := &Repository{db, &clockStub{}}
 			err := r.UpdateCard(tt.card)
 
 			if err != tt.wantErr {
