@@ -9,6 +9,7 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
+	"github.com/jmcveigh55/flash/pkg/core/updating"
 )
 
 type dbDriverStub struct {
@@ -18,11 +19,17 @@ type dbDriverStub struct {
 func (d *dbDriverStub) Write(collection string, resource string, v any) error {
 	switch val := v.(type) {
 	case Card:
+		for i := range d.cards {
+			if d.cards[i].Title == val.Title {
+				d.cards[i].Desc = val.Desc
+				return nil
+			}
+		}
 		d.cards = append(d.cards, val)
+		return nil
 	default:
 		return errors.New("A card was not passed to dbDriverStub.Write")
 	}
-	return nil
 }
 
 func (d *dbDriverStub) ReadAll(collection string) ([]string, error) {
@@ -85,6 +92,7 @@ func TestAddCardSingle(t *testing.T) {
 			db := &dbDriverStub{}
 			r := &Repository{db}
 			err := r.AddCard(tt.card)
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
@@ -188,13 +196,14 @@ func TestDeleteCardSingle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db}
 			db.cards = []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			}
+			r := &Repository{db}
 			err := r.DeleteCard(tt.card)
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
@@ -226,11 +235,10 @@ func TestDeleteCardMultiple(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db}
 			for _, c := range tt.cards {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: ""})
 			}
-
+			r := &Repository{db}
 			for _, c := range tt.cards {
 				r.DeleteCard(c)
 			}
@@ -269,17 +277,63 @@ func TestGetCards(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db := &dbDriverStub{}
-			r := &Repository{db}
 			for _, c := range tt.want {
 				db.cards = append(db.cards, Card{Title: c.Title, Desc: c.Desc})
 			}
+			r := &Repository{db}
 			cards, err := r.GetCards()
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
 
 			if !reflect.DeepEqual(tt.want, cards) {
 				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, cards)
+			}
+		})
+	}
+}
+
+func TestUpdateCardSingle(t *testing.T) {
+	tests := []struct {
+		name    string
+		card    updating.Card
+		want    []Card
+		wantErr error
+	}{
+		{
+			name:    "Normal",
+			card:    updating.Card{Title: "Subject1", Desc: "Value2"},
+			want:    []Card{{Title: "Subject1", Desc: "Value2"}},
+			wantErr: nil,
+		},
+		{
+			name:    "Empty Title",
+			card:    updating.Card{Title: "Subject2", Desc: "Value2"},
+			want:    []Card{{Title: "Subject1", Desc: "Value1"}},
+			wantErr: ErrCardNotFound,
+		},
+		{
+			name:    "Empty Desc",
+			card:    updating.Card{Title: "Subject1", Desc: ""},
+			want:    []Card{{Title: "Subject1", Desc: ""}},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := &dbDriverStub{}
+			db.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
+			r := &Repository{db}
+			err := r.UpdateCard(tt.card)
+
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
+			}
+
+			if !reflect.DeepEqual(tt.want, db.cards) {
+				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, db.cards)
 			}
 		})
 	}

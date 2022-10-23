@@ -8,6 +8,7 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
 	"github.com/jmcveigh55/flash/pkg/core/getting"
+	"github.com/jmcveigh55/flash/pkg/core/updating"
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 
@@ -89,4 +90,16 @@ func (r *Repository) GetCards() ([]getting.Card, error) {
 		cards = append(cards, getting.Card{Title: c.Title, Desc: c.Desc})
 	}
 	return cards, nil
+}
+
+func (r *Repository) UpdateCard(c updating.Card) error {
+	cards, _ := r.GetCards()
+
+	for _, card := range cards {
+		if card.Title == c.Title {
+			u := Card{Title: card.Title, Desc: c.Desc}
+			return r.db.Write(cardCollection, card.Title, u)
+		}
+	}
+	return ErrCardNotFound
 }
