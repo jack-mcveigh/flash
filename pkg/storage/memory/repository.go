@@ -16,7 +16,7 @@ var (
 )
 
 type repository struct {
-	cards []Card
+	cards []*Card
 	clock storage.Clock
 }
 
@@ -26,7 +26,7 @@ func New() *repository {
 	return r
 }
 
-func (r *repository) AddCard(c adding.Card) error {
+func (r *repository) AddCard(c *adding.Card) error {
 	for _, card := range r.cards {
 		if card.Title == c.Title {
 			return ErrCardAlreadyExists
@@ -36,7 +36,7 @@ func (r *repository) AddCard(c adding.Card) error {
 	t := r.clock.Now()
 	r.cards = append(
 		r.cards,
-		Card{
+		&Card{
 			Title:   c.Title,
 			Desc:    c.Desc,
 			Created: t,
@@ -46,7 +46,7 @@ func (r *repository) AddCard(c adding.Card) error {
 	return nil
 }
 
-func (r *repository) DeleteCard(c deleting.Card) error {
+func (r *repository) DeleteCard(c *deleting.Card) error {
 	index := -1
 	for i, card := range r.cards {
 		if c.Title == card.Title {
@@ -62,10 +62,10 @@ func (r *repository) DeleteCard(c deleting.Card) error {
 	return nil
 }
 
-func (r *repository) GetCards() ([]getting.Card, error) {
-	var cards []getting.Card
+func (r *repository) GetCards() ([]*getting.Card, error) {
+	var cards []*getting.Card
 	for _, c := range r.cards {
-		cards = append(cards, getting.Card{
+		cards = append(cards, &getting.Card{
 			Title: c.Title,
 			Desc:  c.Desc,
 		})
@@ -73,7 +73,7 @@ func (r *repository) GetCards() ([]getting.Card, error) {
 	return cards, nil
 }
 
-func (r *repository) UpdateCard(c updating.Card) error {
+func (r *repository) UpdateCard(c *updating.Card) error {
 	for i := range r.cards {
 		if r.cards[i].Title == c.Title {
 			r.cards[i].Desc = c.Desc

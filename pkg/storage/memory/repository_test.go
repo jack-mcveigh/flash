@@ -20,26 +20,26 @@ func (c *clockStub) Now() time.Time {
 func TestAddCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
-		card    adding.Card
-		want    []Card
+		card    *adding.Card
+		want    []*Card
 		wantErr error
 	}{
 		{
 			name:    "Normal",
-			card:    adding.Card{Title: "Subject1", Desc: "Value1"},
-			want:    []Card{{Title: "Subject1", Desc: "Value1"}},
+			card:    &adding.Card{Title: "Subject1", Desc: "Value1"},
+			want:    []*Card{{Title: "Subject1", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Title",
-			card:    adding.Card{Title: "", Desc: "Value1"},
-			want:    []Card{{Title: "", Desc: "Value1"}},
+			card:    &adding.Card{Title: "", Desc: "Value1"},
+			want:    []*Card{{Title: "", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Desc",
-			card:    adding.Card{Title: "Subject1", Desc: ""},
-			want:    []Card{{Title: "Subject1", Desc: ""}},
+			card:    &adding.Card{Title: "Subject1", Desc: ""},
+			want:    []*Card{{Title: "Subject1", Desc: ""}},
 			wantErr: nil,
 		},
 	}
@@ -64,17 +64,17 @@ func TestAddCardSingle(t *testing.T) {
 func TestAddCardMultiple(t *testing.T) {
 	tests := []struct {
 		name    string
-		cards   []adding.Card
-		want    []Card
+		cards   []*adding.Card
+		want    []*Card
 		wantErr error
 	}{
 		{
 			name: "Normal",
-			cards: []adding.Card{
+			cards: []*adding.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 			},
-			want: []Card{
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 			},
@@ -82,11 +82,11 @@ func TestAddCardMultiple(t *testing.T) {
 		},
 		{
 			name: "Duplicate Title",
-			cards: []adding.Card{
+			cards: []*adding.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject1", Desc: "Value2"},
 			},
-			want: []Card{
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 			},
 			wantErr: ErrCardAlreadyExists,
@@ -116,14 +116,14 @@ func TestAddCardMultiple(t *testing.T) {
 func TestDeleteCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
-		card    deleting.Card
-		want    []Card
+		card    *deleting.Card
+		want    []*Card
 		wantErr error
 	}{
 		{
 			name: "Delete First",
-			card: deleting.Card{Title: "Subject1"},
-			want: []Card{
+			card: &deleting.Card{Title: "Subject1"},
+			want: []*Card{
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
 			},
@@ -131,8 +131,8 @@ func TestDeleteCardSingle(t *testing.T) {
 		},
 		{
 			name: "Delete Last",
-			card: deleting.Card{Title: "Subject3"},
-			want: []Card{
+			card: &deleting.Card{Title: "Subject3"},
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 			},
@@ -140,8 +140,8 @@ func TestDeleteCardSingle(t *testing.T) {
 		},
 		{
 			name: "Card not found",
-			card: deleting.Card{Title: "Subject4"},
-			want: []Card{
+			card: &deleting.Card{Title: "Subject4"},
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
@@ -154,7 +154,7 @@ func TestDeleteCardSingle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &repository{}
 			r.clock = &clockStub{}
-			r.cards = []Card{
+			r.cards = []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
@@ -174,26 +174,26 @@ func TestDeleteCardSingle(t *testing.T) {
 func TestDeleteCardMultiple(t *testing.T) {
 	tests := []struct {
 		name  string
-		cards []deleting.Card
-		want  []Card
+		cards []*deleting.Card
+		want  []*Card
 	}{
 		{
 			name: "Normal",
-			cards: []deleting.Card{
+			cards: []*deleting.Card{
 				{Title: "Subject1"},
 				{Title: "Subject2"},
 				{Title: "Subject3"},
 			},
-			want: []Card{},
+			want: []*Card{},
 		},
 		{
 			name: "One Card Not Found",
-			cards: []deleting.Card{
+			cards: []*deleting.Card{
 				{Title: "Subject2"},
 				{Title: "Subject3"},
 				{Title: "Subject4"},
 			},
-			want: []Card{{Title: "Subject1", Desc: "Value1"}},
+			want: []*Card{{Title: "Subject1", Desc: "Value1"}},
 		},
 	}
 
@@ -201,7 +201,7 @@ func TestDeleteCardMultiple(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &repository{}
 			r.clock = &clockStub{}
-			r.cards = []Card{
+			r.cards = []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
@@ -221,17 +221,17 @@ func TestDeleteCardMultiple(t *testing.T) {
 func TestGetCards(t *testing.T) {
 	tests := []struct {
 		name    string
-		want    []getting.Card
+		want    []*getting.Card
 		wantErr error
 	}{
 		{
 			name:    "Single Card",
-			want:    []getting.Card{{Title: "Subject1", Desc: "Value1"}},
+			want:    []*getting.Card{{Title: "Subject1", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name: "Multiple Cards",
-			want: []getting.Card{
+			want: []*getting.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
@@ -245,7 +245,7 @@ func TestGetCards(t *testing.T) {
 			r := &repository{}
 			r.clock = &clockStub{}
 			for _, c := range tt.want {
-				r.cards = append(r.cards, Card{Title: c.Title, Desc: c.Desc})
+				r.cards = append(r.cards, &Card{Title: c.Title, Desc: c.Desc})
 			}
 			cards, err := r.GetCards()
 
@@ -263,26 +263,26 @@ func TestGetCards(t *testing.T) {
 func TestUpdateCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
-		card    updating.Card
-		want    []Card
+		card    *updating.Card
+		want    []*Card
 		wantErr error
 	}{
 		{
 			name:    "Normal",
-			card:    updating.Card{Title: "Subject1", Desc: "Value2"},
-			want:    []Card{{Title: "Subject1", Desc: "Value2"}},
+			card:    &updating.Card{Title: "Subject1", Desc: "Value2"},
+			want:    []*Card{{Title: "Subject1", Desc: "Value2"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Title",
-			card:    updating.Card{Title: "Subject2", Desc: "Value2"},
-			want:    []Card{{Title: "Subject1", Desc: "Value1"}},
+			card:    &updating.Card{Title: "Subject2", Desc: "Value2"},
+			want:    []*Card{{Title: "Subject1", Desc: "Value1"}},
 			wantErr: ErrCardNotFound,
 		},
 		{
 			name:    "Empty Desc",
-			card:    updating.Card{Title: "Subject1", Desc: ""},
-			want:    []Card{{Title: "Subject1", Desc: ""}},
+			card:    &updating.Card{Title: "Subject1", Desc: ""},
+			want:    []*Card{{Title: "Subject1", Desc: ""}},
 			wantErr: nil,
 		},
 	}
@@ -291,7 +291,7 @@ func TestUpdateCardSingle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &repository{}
 			r.clock = &clockStub{}
-			r.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
+			r.cards = []*Card{{Title: "Subject1", Desc: "Value1"}}
 			err := r.UpdateCard(tt.card)
 
 			if err != tt.wantErr {
@@ -308,27 +308,27 @@ func TestUpdateCardSingle(t *testing.T) {
 func TestUpdateCardMultiple(t *testing.T) {
 	tests := []struct {
 		name  string
-		cards []updating.Card
-		want  []Card
+		cards []*updating.Card
+		want  []*Card
 	}{
 		{
 			name: "Normal",
-			cards: []updating.Card{
+			cards: []*updating.Card{
 				{Title: "Subject1", Desc: "Value3"},
 				{Title: "Subject2", Desc: "Value4"},
 			},
-			want: []Card{
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value3"},
 				{Title: "Subject2", Desc: "Value4"},
 			},
 		},
 		{
 			name: "One Card Not Found",
-			cards: []updating.Card{
+			cards: []*updating.Card{
 				{Title: "Subject2", Desc: "Value3"},
 				{Title: "Subject3", Desc: "Value4"},
 			},
-			want: []Card{
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value3"},
 			},
@@ -339,7 +339,7 @@ func TestUpdateCardMultiple(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &repository{}
 			r.clock = &clockStub{}
-			r.cards = []Card{
+			r.cards = []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 			}
