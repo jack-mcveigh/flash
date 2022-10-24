@@ -126,7 +126,7 @@ func addCard(ctx *cli.Context, a adding.Service) error {
 
 func deleteCard(ctx *cli.Context, d deleting.Service) error {
 	return d.DeleteCard(
-		deleting.Card{
+		&deleting.Card{
 			Title: ctx.String("t"),
 		},
 	)

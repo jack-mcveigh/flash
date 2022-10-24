@@ -6,10 +6,10 @@ import (
 )
 
 type repositoryStub struct {
-	cards []Card
+	cards []*Card
 }
 
-func (r *repositoryStub) DeleteCard(c Card) error {
+func (r *repositoryStub) DeleteCard(c *Card) error {
 	index := -1
 	for i, card := range r.cards {
 		if c.Title == card.Title {
@@ -28,14 +28,14 @@ func (r *repositoryStub) DeleteCard(c Card) error {
 func TestDeleteCard(t *testing.T) {
 	tests := []struct {
 		name    string
-		card    Card
-		want    []Card
+		card    *Card
+		want    []*Card
 		wantErr error
 	}{
 		{
 			name: "Normal",
-			card: Card{Title: "Subject1"},
-			want: []Card{
+			card: &Card{Title: "Subject1"},
+			want: []*Card{
 				{Title: "Subject2"},
 				{Title: "Subject3"},
 			},
@@ -43,8 +43,8 @@ func TestDeleteCard(t *testing.T) {
 		},
 		{
 			name: "Card not found",
-			card: Card{Title: "Subject4"},
-			want: []Card{
+			card: &Card{Title: "Subject4"},
+			want: []*Card{
 				{Title: "Subject1"},
 				{Title: "Subject2"},
 				{Title: "Subject3"},
@@ -56,7 +56,7 @@ func TestDeleteCard(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &repositoryStub{}
-			repo.cards = []Card{
+			repo.cards = []*Card{
 				{Title: "Subject1"},
 				{Title: "Subject2"},
 				{Title: "Subject3"},
