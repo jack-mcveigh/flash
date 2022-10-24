@@ -84,6 +84,7 @@ func TestDeleteCard(t *testing.T) {
 			}
 			ds := New(repo)
 			err := ds.DeleteCard(tt.group, tt.card)
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}

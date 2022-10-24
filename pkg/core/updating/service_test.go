@@ -58,6 +58,7 @@ func TestUpdateCard(t *testing.T) {
 			repo.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
 			us := New(repo)
 			err := us.UpdateCard(tt.card)
+
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
