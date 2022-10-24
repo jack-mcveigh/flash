@@ -43,7 +43,7 @@ func New() (*repository, error) {
 	return &repository{db, c}, err
 }
 
-func (r *repository) AddCard(c adding.Card) error {
+func (r *repository) AddCard(c *adding.Card) error {
 	cards, _ := r.GetCards()
 	for _, card := range cards {
 		if card.Title == c.Title {
@@ -63,7 +63,7 @@ func (r *repository) AddCard(c adding.Card) error {
 	return err
 }
 
-func (r *repository) DeleteCard(c deleting.Card) error {
+func (r *repository) DeleteCard(c *deleting.Card) error {
 	cards, _ := r.GetCards()
 
 	index := -1
@@ -80,15 +80,15 @@ func (r *repository) DeleteCard(c deleting.Card) error {
 	return r.db.Delete(cardCollection, c.Title)
 }
 
-func (r *repository) getCards() ([]Card, error) {
-	cards := []Card{}
+func (r *repository) getCards() ([]*Card, error) {
+	cards := []*Card{}
 	records, err := r.db.ReadAll(cardCollection)
 	if err != nil {
 		return cards, err
 	}
 
 	for _, r := range records {
-		var c Card
+		var c *Card
 		if err := json.Unmarshal([]byte(r), &c); err != nil {
 			return cards, err
 		}
@@ -98,20 +98,20 @@ func (r *repository) getCards() ([]Card, error) {
 	return cards, nil
 }
 
-func (r *repository) GetCards() ([]getting.Card, error) {
-	cards := []getting.Card{}
+func (r *repository) GetCards() ([]*getting.Card, error) {
+	cards := []*getting.Card{}
 	cs, err := r.getCards()
 	if err != nil {
 		return cards, err
 	}
 
 	for _, c := range cs {
-		cards = append(cards, getting.Card{Title: c.Title, Desc: c.Desc})
+		cards = append(cards, &getting.Card{Title: c.Title, Desc: c.Desc})
 	}
 	return cards, nil
 }
 
-func (r *repository) UpdateCard(c updating.Card) error {
+func (r *repository) UpdateCard(c *updating.Card) error {
 	cards, _ := r.getCards()
 
 	for _, card := range cards {
