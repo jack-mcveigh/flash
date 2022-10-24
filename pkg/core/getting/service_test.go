@@ -6,21 +6,21 @@ import (
 )
 
 type repositoryStub struct {
-	cards []Card
+	cards []*Card
 }
 
-func (r *repositoryStub) GetCards() ([]Card, error) {
+func (r *repositoryStub) GetCards() ([]*Card, error) {
 	return r.cards, nil
 }
 
 func TestGetCards(t *testing.T) {
 	tests := []struct {
 		name string
-		want []Card
+		want []*Card
 	}{
 		{
 			name: "Normal",
-			want: []Card{
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value3"},
@@ -28,13 +28,13 @@ func TestGetCards(t *testing.T) {
 		},
 		{
 			name: "Single Card",
-			want: []Card{
+			want: []*Card{
 				{Title: "Subject1", Desc: "Value1"},
 			},
 		},
 		{
 			name: "No Cards",
-			want: []Card{},
+			want: []*Card{},
 		},
 	}
 
