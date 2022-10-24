@@ -117,7 +117,7 @@ func updateCmd(u updating.Service) *cli.Command {
 
 func addCard(ctx *cli.Context, a adding.Service) error {
 	return a.AddCard(
-		adding.Card{
+		&adding.Card{
 			Title: ctx.String("t"),
 			Desc:  ctx.String("d"),
 		},

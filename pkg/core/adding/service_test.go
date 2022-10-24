@@ -6,10 +6,10 @@ import (
 )
 
 type repositoryStub struct {
-	cards []Card
+	cards []*Card
 }
 
-func (r *repositoryStub) AddCard(c Card) error {
+func (r *repositoryStub) AddCard(c *Card) error {
 	r.cards = append(r.cards, c)
 	return nil
 }
@@ -17,25 +17,25 @@ func (r *repositoryStub) AddCard(c Card) error {
 func TestAddCard(t *testing.T) {
 	tests := []struct {
 		name    string
-		card    Card
-		want    []Card
+		card    *Card
+		want    []*Card
 		wantErr error
 	}{
 		{
 			name:    "Normal",
-			card:    Card{Title: "Subject", Desc: "Value"},
-			want:    []Card{{Title: "Subject", Desc: "Value"}},
+			card:    &Card{Title: "Subject", Desc: "Value"},
+			want:    []*Card{{Title: "Subject", Desc: "Value"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Desc",
-			card:    Card{Title: "Subject", Desc: ""},
-			want:    []Card{{Title: "Subject", Desc: ""}},
+			card:    &Card{Title: "Subject", Desc: ""},
+			want:    []*Card{{Title: "Subject", Desc: ""}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Title",
-			card:    Card{Title: "", Desc: "Value"},
+			card:    &Card{Title: "", Desc: "Value"},
 			want:    nil,
 			wantErr: ErrCardEmptyTitle,
 		},
