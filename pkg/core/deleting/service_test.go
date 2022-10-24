@@ -9,7 +9,11 @@ type repositoryStub struct {
 	cards []Card
 }
 
-func (r *repositoryStub) DeleteCard(c Card) error {
+func (r *repositoryStub) DeleteCard(g string, c Card) error {
+	if g != "" {
+		c.Title = g + "." + c.Title
+	}
+
 	index := -1
 	for i, card := range r.cards {
 		if c.Title == card.Title {
@@ -28,26 +32,42 @@ func (r *repositoryStub) DeleteCard(c Card) error {
 func TestDeleteCard(t *testing.T) {
 	tests := []struct {
 		name    string
+		group   string
 		card    Card
 		want    []Card
 		wantErr error
 	}{
 		{
-			name: "Normal",
-			card: Card{Title: "Subject1"},
+			name:  "Normal",
+			group: "Group",
+			card:  Card{Title: "Subject1"},
 			want: []Card{
-				{Title: "Subject2"},
-				{Title: "Subject3"},
+				{Title: "Subject1"},
+				{Title: "Group.Subject2"},
+				{Title: "Group.Subject3"},
 			},
 			wantErr: nil,
 		},
 		{
-			name: "Card not found",
-			card: Card{Title: "Subject4"},
+			name:  "No Group",
+			group: "",
+			card:  Card{Title: "Subject1"},
+			want: []Card{
+				{Title: "Group.Subject1"},
+				{Title: "Group.Subject2"},
+				{Title: "Group.Subject3"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Card not found",
+			group: "Group",
+			card:  Card{Title: "Subject4"},
 			want: []Card{
 				{Title: "Subject1"},
-				{Title: "Subject2"},
-				{Title: "Subject3"},
+				{Title: "Group.Subject1"},
+				{Title: "Group.Subject2"},
+				{Title: "Group.Subject3"},
 			},
 			wantErr: ErrCardNotFound,
 		},
@@ -58,11 +78,12 @@ func TestDeleteCard(t *testing.T) {
 			repo := &repositoryStub{}
 			repo.cards = []Card{
 				{Title: "Subject1"},
-				{Title: "Subject2"},
-				{Title: "Subject3"},
+				{Title: "Group.Subject1"},
+				{Title: "Group.Subject2"},
+				{Title: "Group.Subject3"},
 			}
 			ds := New(repo)
-			err := ds.DeleteCard(tt.card)
+			err := ds.DeleteCard(tt.group, tt.card)
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
