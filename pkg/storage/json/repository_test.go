@@ -25,14 +25,14 @@ type dbDriverStub struct {
 
 func (d *dbDriverStub) Write(collection string, resource string, v any) error {
 	switch val := v.(type) {
-	case Card:
+	case *Card:
 		for i := range d.cards {
 			if d.cards[i].Title == val.Title {
 				d.cards[i].Desc = val.Desc
 				return nil
 			}
 		}
-		d.cards = append(d.cards, &val)
+		d.cards = append(d.cards, val)
 		return nil
 	default:
 		return errors.New("A card was not passed to dbDriverStub.Write")

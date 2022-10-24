@@ -52,7 +52,7 @@ func (r *repository) AddCard(c *adding.Card) error {
 	}
 
 	t := r.clock.Now()
-	card := Card{
+	card := &Card{
 		Title:   c.Title,
 		Desc:    c.Desc,
 		Created: t,
@@ -116,7 +116,7 @@ func (r *repository) UpdateCard(c *updating.Card) error {
 
 	for _, card := range cards {
 		if card.Title == c.Title {
-			u := Card{
+			u := &Card{
 				Title:   card.Title,
 				Desc:    c.Desc,
 				Created: card.Created,
