@@ -1,11 +1,15 @@
 package getting
 
+import "errors"
+
+var ErrGroupNotFound error = errors.New("Card not found")
+
 type Service interface {
-	GetCards() ([]Card, error)
+	GetCards(string) ([]Card, error)
 }
 
 type Repository interface {
-	GetCards() ([]Card, error)
+	GetCards(string) ([]Card, error)
 }
 
 type service struct {
@@ -16,6 +20,6 @@ func New(r Repository) *service {
 	return &service{r}
 }
 
-func (s *service) GetCards() ([]Card, error) {
-	return s.r.GetCards()
+func (s *service) GetCards(g string) ([]Card, error) {
+	return s.r.GetCards(g)
 }
