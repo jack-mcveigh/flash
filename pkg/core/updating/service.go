@@ -6,11 +6,11 @@ var ErrCardEmptyTitle error = errors.New("Card has an empty title")
 var ErrCardNotFound error = errors.New("Card not found")
 
 type Service interface {
-	UpdateCard(Card) error
+	UpdateCard(*Card) error
 }
 
 type Repository interface {
-	UpdateCard(Card) error
+	UpdateCard(*Card) error
 }
 
 type service struct {
@@ -21,7 +21,7 @@ func New(r Repository) *service {
 	return &service{r}
 }
 
-func (s *service) UpdateCard(c Card) error {
+func (s *service) UpdateCard(c *Card) error {
 	if c.Title == "" {
 		return ErrCardEmptyTitle
 	}

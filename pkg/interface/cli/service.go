@@ -142,7 +142,7 @@ func getCards(ctx *cli.Context, g getting.Service) error {
 
 func updateCard(ctx *cli.Context, u updating.Service) error {
 	return u.UpdateCard(
-		updating.Card{
+		&updating.Card{
 			Title: ctx.String("t"),
 			Desc:  ctx.String("d"),
 		},
