@@ -45,6 +45,12 @@ func addCmd(a adding.Service) *cli.Command {
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:     "group",
+				Aliases:  []string{"g"},
+				Usage:    "Flashcard's group",
+				Required: true,
+			},
+			&cli.StringFlag{
 				Name:     "title",
 				Aliases:  []string{"t"},
 				Usage:    "Flashcard's title",
@@ -70,6 +76,12 @@ func deleteCmd(d deleting.Service) *cli.Command {
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:     "group",
+				Aliases:  []string{"g"},
+				Usage:    "Flashcard's group",
+				Required: true,
+			},
+			&cli.StringFlag{
 				Name:     "title",
 				Aliases:  []string{"t"},
 				Usage:    "Flashcard's title",
@@ -87,6 +99,14 @@ func getCmd(g getting.Service) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			return getCards(ctx, g)
 		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "group",
+				Aliases:  []string{"g"},
+				Usage:    "Flashcard's group",
+				Required: true,
+			},
+		},
 	}
 }
 
@@ -99,6 +119,12 @@ func updateCmd(u updating.Service) *cli.Command {
 			return updateCard(ctx, u)
 		},
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "group",
+				Aliases:  []string{"g"},
+				Usage:    "Flashcard's group",
+				Required: true,
+			},
 			&cli.StringFlag{
 				Name:     "title",
 				Aliases:  []string{"t"},
@@ -117,6 +143,7 @@ func updateCmd(u updating.Service) *cli.Command {
 
 func addCard(ctx *cli.Context, a adding.Service) error {
 	return a.AddCard(
+		ctx.String("g"),
 		adding.Card{
 			Title: ctx.String("t"),
 			Desc:  ctx.String("d"),
@@ -126,6 +153,7 @@ func addCard(ctx *cli.Context, a adding.Service) error {
 
 func deleteCard(ctx *cli.Context, d deleting.Service) error {
 	return d.DeleteCard(
+		ctx.String("g"),
 		deleting.Card{
 			Title: ctx.String("t"),
 		},
@@ -133,7 +161,7 @@ func deleteCard(ctx *cli.Context, d deleting.Service) error {
 }
 
 func getCards(ctx *cli.Context, g getting.Service) error {
-	cards, _ := g.GetCards()
+	cards, _ := g.GetCards(ctx.String("g"))
 	for i, c := range cards {
 		fmt.Printf("\t%d) %s -> %s\n", i, c.Title, c.Desc)
 	}
@@ -142,6 +170,7 @@ func getCards(ctx *cli.Context, g getting.Service) error {
 
 func updateCard(ctx *cli.Context, u updating.Service) error {
 	return u.UpdateCard(
+		ctx.String("g"),
 		updating.Card{
 			Title: ctx.String("t"),
 			Desc:  ctx.String("d"),
