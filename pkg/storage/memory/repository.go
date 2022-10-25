@@ -2,6 +2,7 @@ package memory
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -13,6 +14,7 @@ import (
 var (
 	ErrCardAlreadyExists = errors.New("Card already exists")
 	ErrCardNotFound      = errors.New("Card not found")
+	ErrGroupNotFound     = errors.New("Card not found")
 )
 
 type repository struct {
@@ -26,7 +28,11 @@ func New() *repository {
 	return r
 }
 
-func (r *repository) AddCard(c adding.Card) error {
+func (r *repository) AddCard(g string, c adding.Card) error {
+	if g != "" {
+		c.Title = g + "." + c.Title
+	}
+
 	for _, card := range r.cards {
 		if card.Title == c.Title {
 			return ErrCardAlreadyExists
@@ -46,7 +52,11 @@ func (r *repository) AddCard(c adding.Card) error {
 	return nil
 }
 
-func (r *repository) DeleteCard(c deleting.Card) error {
+func (r *repository) DeleteCard(g string, c deleting.Card) error {
+	if g != "" {
+		c.Title = g + "." + c.Title
+	}
+
 	index := -1
 	for i, card := range r.cards {
 		if c.Title == card.Title {
@@ -62,18 +72,29 @@ func (r *repository) DeleteCard(c deleting.Card) error {
 	return nil
 }
 
-func (r *repository) GetCards() ([]getting.Card, error) {
+func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	var cards []getting.Card
 	for _, c := range r.cards {
-		cards = append(cards, getting.Card{
-			Title: c.Title,
-			Desc:  c.Desc,
-		})
+		if strings.HasPrefix(c.Title, g) {
+			cards = append(cards, getting.Card{
+				Title: c.Title,
+				Desc:  c.Desc,
+			})
+		}
 	}
+
+	if len(cards) == 0 {
+		return cards, ErrGroupNotFound
+	}
+
 	return cards, nil
 }
 
-func (r *repository) UpdateCard(c updating.Card) error {
+func (r *repository) UpdateCard(g string, c updating.Card) error {
+	if g != "" {
+		c.Title = g + "." + c.Title
+	}
+
 	for i := range r.cards {
 		if r.cards[i].Title == c.Title {
 			r.cards[i].Desc = c.Desc
