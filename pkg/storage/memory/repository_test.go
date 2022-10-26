@@ -103,7 +103,7 @@ func TestAddCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Group.Subject1", Desc: "Value1"},
 			},
-			wantErr: ErrCardAlreadyExists,
+			wantErr: ErrCardFound,
 		},
 		{
 			name:  "Empty Group",

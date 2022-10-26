@@ -161,11 +161,11 @@ func deleteCard(ctx *cli.Context, d deleting.Service) error {
 }
 
 func getCards(ctx *cli.Context, g getting.Service) error {
-	cards, _ := g.GetCards(ctx.String("g"))
+	cards, err := g.GetCards(ctx.String("g"))
 	for i, c := range cards {
 		fmt.Printf("\t%d) %s -> %s\n", i, c.Title, c.Desc)
 	}
-	return nil
+	return err
 }
 
 func updateCard(ctx *cli.Context, u updating.Service) error {

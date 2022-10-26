@@ -9,11 +9,11 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
 	"github.com/jmcveigh55/flash/pkg/interface/cli"
-	"github.com/jmcveigh55/flash/pkg/storage/memory"
+	"github.com/jmcveigh55/flash/pkg/storage/json"
 )
 
 func main() {
-	r := memory.New()
+	r, _ := json.New()
 	a := adding.New(r)
 	d := deleting.New(r)
 	g := getting.New(r)

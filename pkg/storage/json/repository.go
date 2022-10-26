@@ -3,7 +3,10 @@ package json
 import (
 	"encoding/json"
 	"errors"
+	"io/fs"
+	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
@@ -19,19 +22,21 @@ const cardCollection = "card"
 var (
 	dataPath = "/tmp/.flash"
 
-	ErrCardAlreadyExists = errors.New("Card already exists")
-	ErrCardNotFound      = errors.New("Card not found")
+	ErrCardFound     = errors.New("card already exists")
+	ErrCardNotFound  = errors.New("card not found")
+	ErrGroupNotFound = errors.New("group not found")
 )
 
-func joinCollectionWithGroup(c, g string) string {
-	if g != "" {
-		return c + "/" + strings.Replace(g, ".", "/", -1)
+func joinSubCollectionPath(c, s string) string {
+	if s != "" {
+		return c + "/" + strings.Replace(s, ".", "/", -1)
 	}
 	return c
 }
 
 type dbDriver interface {
 	Write(string, string, any) error
+	Read(string, string, any) error
 	ReadAll(string) ([]string, error)
 	Delete(string, string) error
 }
@@ -51,12 +56,40 @@ func New() (*repository, error) {
 	return &repository{db, c}, err
 }
 
+func (r *repository) checkCardExists(coll, title string) (bool, error) {
+	err := r.db.Read(coll, title, &Card{})
+	switch err.(type) {
+	case *fs.PathError:
+		return false, nil
+	case nil:
+		return true, nil
+	default:
+		return false, err
+	}
+}
+
+func (r *repository) checkGroupExists(g string) (bool, error) {
+	p := dataPath + "/" + g
+	f, err := os.Open(p)
+	switch err.(type) {
+	case *fs.PathError:
+		return false, nil
+	case nil:
+		f.Close()
+		return true, nil
+	default:
+		return false, err
+	}
+}
+
 func (r *repository) AddCard(g string, c adding.Card) error {
-	cards, _ := r.GetCards(g)
-	for _, card := range cards {
-		if card.Title == c.Title {
-			return ErrCardAlreadyExists
-		}
+	subCollection := joinSubCollectionPath(cardCollection, g)
+	ok, err := r.checkCardExists(subCollection, c.Title)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return ErrCardFound
 	}
 
 	t := r.clock.Now()
@@ -67,37 +100,59 @@ func (r *repository) AddCard(g string, c adding.Card) error {
 		Updated: t,
 	}
 
-	err := r.db.Write(joinCollectionWithGroup(cardCollection, g), card.Title, card)
+	err = r.db.Write(subCollection, card.Title, card)
 	return err
 }
 
 func (r *repository) DeleteCard(g string, c deleting.Card) error {
-	cards, _ := r.getCards(g)
-
-	index := -1
-	for i, card := range cards {
-		if c.Title == card.Title {
-			index = i
-		}
+	subCollection := joinSubCollectionPath(cardCollection, g)
+	ok, err := r.checkGroupExists(subCollection)
+	if err != nil {
+		return err
 	}
-
-	if index == -1 {
+	if !ok {
+		return ErrGroupNotFound
+	}
+	ok, err = r.checkCardExists(subCollection, c.Title)
+	if err != nil {
+		return err
+	}
+	if !ok {
 		return ErrCardNotFound
 	}
 
-	return r.db.Delete(joinCollectionWithGroup(cardCollection, g), c.Title)
+	return r.db.Delete(subCollection, c.Title)
 }
 
-func (r *repository) getCards(g string) ([]Card, error) {
+func getCardsFromGroup(g string) ([]Card, error) {
+	p := dataPath + "/" + g
+
 	cards := []Card{}
-	records, err := r.db.ReadAll(joinCollectionWithGroup(cardCollection, g))
+	f, err := os.Open(p)
+	if err != nil {
+		return cards, ErrGroupNotFound
+	}
+	defer f.Close()
+
+	items, err := f.ReadDir(0)
 	if err != nil {
 		return cards, err
 	}
 
-	for _, r := range records {
+	for _, i := range items {
+		if i.IsDir() || filepath.Ext(i.Name()) != ".json" {
+			continue
+		}
+
+		jsonFile, err := os.Open(filepath.Join(p, i.Name()))
+		if err != nil {
+			return cards, err
+		}
+		defer jsonFile.Close()
+
 		var c Card
-		if err := json.Unmarshal([]byte(r), &c); err != nil {
+		err = json.NewDecoder(jsonFile).Decode(&c)
+		if err != nil {
 			return cards, err
 		}
 
@@ -108,7 +163,16 @@ func (r *repository) getCards(g string) ([]Card, error) {
 
 func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	cards := []getting.Card{}
-	cs, err := r.getCards(g)
+	subCollection := joinSubCollectionPath(cardCollection, g)
+	ok, err := r.checkGroupExists(subCollection)
+	if err != nil {
+		return cards, err
+	}
+	if !ok {
+		return cards, ErrGroupNotFound
+	}
+
+	cs, err := getCardsFromGroup(subCollection)
 	if err != nil {
 		return cards, err
 	}
@@ -120,18 +184,33 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 }
 
 func (r *repository) UpdateCard(g string, c updating.Card) error {
-	cards, _ := r.getCards(g)
-
-	for _, card := range cards {
-		if card.Title == c.Title {
-			u := Card{
-				Title:   card.Title,
-				Desc:    c.Desc,
-				Created: card.Created,
-				Updated: r.clock.Now(),
-			}
-			return r.db.Write(joinCollectionWithGroup(cardCollection, g), card.Title, u)
-		}
+	subCollection := joinSubCollectionPath(cardCollection, g)
+	ok, err := r.checkGroupExists(subCollection)
+	if err != nil {
+		return err
 	}
-	return ErrCardNotFound
+	if !ok {
+		return ErrGroupNotFound
+	}
+
+	ok, err = r.checkCardExists(subCollection, c.Title)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrCardNotFound
+	}
+
+	card := &Card{}
+	if err = r.db.Read(subCollection, c.Title, &card); err != nil {
+		return err
+	}
+
+	u := Card{
+		Title:   card.Title,
+		Desc:    c.Desc,
+		Created: card.Created,
+		Updated: r.clock.Now(),
+	}
+	return r.db.Write(subCollection, card.Title, u)
 }

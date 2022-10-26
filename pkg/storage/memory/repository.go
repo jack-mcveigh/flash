@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	ErrCardAlreadyExists = errors.New("Card already exists")
-	ErrCardNotFound      = errors.New("Card not found")
-	ErrGroupNotFound     = errors.New("Card not found")
+	ErrCardFound     = errors.New("card already exists")
+	ErrCardNotFound  = errors.New("card not found")
+	ErrGroupNotFound = errors.New("group not found")
 )
 
 type repository struct {
@@ -35,7 +35,7 @@ func (r *repository) AddCard(g string, c adding.Card) error {
 
 	for _, card := range r.cards {
 		if card.Title == c.Title {
-			return ErrCardAlreadyExists
+			return ErrCardFound
 		}
 	}
 
