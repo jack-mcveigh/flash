@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os/user"
+	"strings"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -21,6 +22,13 @@ var (
 	ErrCardAlreadyExists = errors.New("Card already exists")
 	ErrCardNotFound      = errors.New("Card not found")
 )
+
+func joinCollectionWithGroup(c, g string) string {
+	if g != "" {
+		return c + "/" + strings.Replace(g, ".", "/", -1)
+	}
+	return c
+}
 
 type dbDriver interface {
 	Write(string, string, any) error
@@ -43,8 +51,8 @@ func New() (*repository, error) {
 	return &repository{db, c}, err
 }
 
-func (r *repository) AddCard(c adding.Card) error {
-	cards, _ := r.GetCards()
+func (r *repository) AddCard(g string, c adding.Card) error {
+	cards, _ := r.GetCards(g)
 	for _, card := range cards {
 		if card.Title == c.Title {
 			return ErrCardAlreadyExists
@@ -59,12 +67,12 @@ func (r *repository) AddCard(c adding.Card) error {
 		Updated: t,
 	}
 
-	err := r.db.Write(cardCollection, card.Title, card)
+	err := r.db.Write(joinCollectionWithGroup(cardCollection, g), card.Title, card)
 	return err
 }
 
-func (r *repository) DeleteCard(c deleting.Card) error {
-	cards, _ := r.GetCards()
+func (r *repository) DeleteCard(g string, c deleting.Card) error {
+	cards, _ := r.getCards(g)
 
 	index := -1
 	for i, card := range cards {
@@ -77,12 +85,12 @@ func (r *repository) DeleteCard(c deleting.Card) error {
 		return ErrCardNotFound
 	}
 
-	return r.db.Delete(cardCollection, c.Title)
+	return r.db.Delete(joinCollectionWithGroup(cardCollection, g), c.Title)
 }
 
-func (r *repository) getCards() ([]Card, error) {
+func (r *repository) getCards(g string) ([]Card, error) {
 	cards := []Card{}
-	records, err := r.db.ReadAll(cardCollection)
+	records, err := r.db.ReadAll(joinCollectionWithGroup(cardCollection, g))
 	if err != nil {
 		return cards, err
 	}
@@ -98,9 +106,9 @@ func (r *repository) getCards() ([]Card, error) {
 	return cards, nil
 }
 
-func (r *repository) GetCards() ([]getting.Card, error) {
+func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	cards := []getting.Card{}
-	cs, err := r.getCards()
+	cs, err := r.getCards(g)
 	if err != nil {
 		return cards, err
 	}
@@ -111,8 +119,8 @@ func (r *repository) GetCards() ([]getting.Card, error) {
 	return cards, nil
 }
 
-func (r *repository) UpdateCard(c updating.Card) error {
-	cards, _ := r.getCards()
+func (r *repository) UpdateCard(g string, c updating.Card) error {
+	cards, _ := r.getCards(g)
 
 	for _, card := range cards {
 		if card.Title == c.Title {
@@ -122,7 +130,7 @@ func (r *repository) UpdateCard(c updating.Card) error {
 				Created: card.Created,
 				Updated: r.clock.Now(),
 			}
-			return r.db.Write(cardCollection, card.Title, u)
+			return r.db.Write(joinCollectionWithGroup(cardCollection, g), card.Title, u)
 		}
 	}
 	return ErrCardNotFound
