@@ -155,6 +155,7 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 }
 
 func (r *repository) UpdateCard(g string, c updating.Card) error {
+
 	subCollection := joinSubCollectionPath(cardCollection, g)
 	if ok := r.checkGroupExists(subCollection); !ok {
 		return ErrGroupNotFound
@@ -164,16 +165,17 @@ func (r *repository) UpdateCard(g string, c updating.Card) error {
 		return ErrCardNotFound
 	}
 
-	card := &Card{}
+	card := Card{}
 	if err := r.db.Read(subCollection, c.Title, &card); err != nil {
 		return err
 	}
 
 	u := Card{
-		Title:   card.Title,
+		Title:   c.Title,
 		Desc:    c.Desc,
 		Created: card.Created,
 		Updated: r.clock.Now(),
 	}
-	return r.db.Write(subCollection, card.Title, u)
+
+	return r.db.Write(subCollection, u.Title, u)
 }

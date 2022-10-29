@@ -3,7 +3,6 @@ package json
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/fs"
 	"reflect"
 	"strings"
@@ -69,7 +68,6 @@ func (d *dbDriverStub) Read(collection, resource string, v any) error {
 		}
 		return &fs.PathError{}
 	default:
-		fmt.Printf("%v, %T", val, val)
 		return errors.New("a *Card was not passed to dbDriverStub.Read")
 	}
 }
