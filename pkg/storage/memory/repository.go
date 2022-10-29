@@ -28,13 +28,18 @@ func New() *repository {
 	return r
 }
 
-func (r *repository) AddCard(g string, c adding.Card) error {
-	if g != "" {
-		c.Title = g + "." + c.Title
+func getCardPath(g, t string) string {
+	if g == "" {
+		return t
 	}
+	return g + "." + t
+}
+
+func (r *repository) AddCard(g string, c adding.Card) error {
+	cardPath := getCardPath(g, c.Title)
 
 	for _, card := range r.cards {
-		if card.Title == c.Title {
+		if card.Title == cardPath {
 			return ErrCardFound
 		}
 	}
@@ -43,7 +48,7 @@ func (r *repository) AddCard(g string, c adding.Card) error {
 	r.cards = append(
 		r.cards,
 		Card{
-			Title:   c.Title,
+			Title:   cardPath,
 			Desc:    c.Desc,
 			Created: t,
 			Updated: t,
@@ -53,13 +58,11 @@ func (r *repository) AddCard(g string, c adding.Card) error {
 }
 
 func (r *repository) DeleteCard(g string, c deleting.Card) error {
-	if g != "" {
-		c.Title = g + "." + c.Title
-	}
+	cardPath := getCardPath(g, c.Title)
 
 	index := -1
 	for i, card := range r.cards {
-		if c.Title == card.Title {
+		if card.Title == cardPath {
 			index = i
 		}
 	}
@@ -91,12 +94,10 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 }
 
 func (r *repository) UpdateCard(g string, c updating.Card) error {
-	if g != "" {
-		c.Title = g + "." + c.Title
-	}
+	cardPath := getCardPath(g, c.Title)
 
 	for i := range r.cards {
-		if r.cards[i].Title == c.Title {
+		if r.cards[i].Title == cardPath {
 			r.cards[i].Desc = c.Desc
 			r.cards[i].Updated = r.clock.Now()
 			return nil
