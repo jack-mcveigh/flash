@@ -3,7 +3,6 @@ package updating
 import "errors"
 
 var ErrCardEmptyTitle error = errors.New("Card has an empty title")
-var ErrCardNotFound error = errors.New("Card not found")
 
 type Service interface {
 	UpdateCard(string, Card) error

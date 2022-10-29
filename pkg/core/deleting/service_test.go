@@ -1,12 +1,28 @@
 package deleting
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
 
+var errCardNotFound error = errors.New("Card not found")
+
 type repositoryStub struct {
 	cards []Card
+}
+
+func newRepositoryStubWithCards() *repositoryStub {
+	return &repositoryStub{
+		cards: []Card{
+			{Title: "Subject1"},
+			{Title: "Subject2"},
+			{Title: "Group.Subject1"},
+			{Title: "Group.Subject2"},
+			{Title: "Group.SubGroup.Subject1"},
+			{Title: "Group.SubGroup.Subject2"},
+		},
+	}
 }
 
 func (r *repositoryStub) DeleteCard(g string, c Card) error {
@@ -22,7 +38,7 @@ func (r *repositoryStub) DeleteCard(g string, c Card) error {
 	}
 
 	if index < 0 {
-		return ErrCardNotFound
+		return errCardNotFound
 	}
 
 	r.cards = append(r.cards[:index], r.cards[index+1:]...)
@@ -43,8 +59,23 @@ func TestDeleteCard(t *testing.T) {
 			card:  Card{Title: "Subject1"},
 			want: []Card{
 				{Title: "Subject1"},
+				{Title: "Subject2"},
 				{Title: "Group.Subject2"},
-				{Title: "Group.Subject3"},
+				{Title: "Group.SubGroup.Subject1"},
+				{Title: "Group.SubGroup.Subject2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			card:  Card{Title: "Subject1"},
+			want: []Card{
+				{Title: "Subject1"},
+				{Title: "Subject2"},
+				{Title: "Group.Subject1"},
+				{Title: "Group.Subject2"},
+				{Title: "Group.SubGroup.Subject2"},
 			},
 			wantErr: nil,
 		},
@@ -53,35 +84,47 @@ func TestDeleteCard(t *testing.T) {
 			group: "",
 			card:  Card{Title: "Subject1"},
 			want: []Card{
+				{Title: "Subject2"},
 				{Title: "Group.Subject1"},
 				{Title: "Group.Subject2"},
-				{Title: "Group.Subject3"},
+				{Title: "Group.SubGroup.Subject1"},
+				{Title: "Group.SubGroup.Subject2"},
 			},
 			wantErr: nil,
 		},
 		{
-			name:  "Card not found",
+			name:  "Card Not Found",
 			group: "Group",
-			card:  Card{Title: "Subject4"},
+			card:  Card{Title: "Subject3"},
 			want: []Card{
 				{Title: "Subject1"},
+				{Title: "Subject2"},
 				{Title: "Group.Subject1"},
 				{Title: "Group.Subject2"},
-				{Title: "Group.Subject3"},
+				{Title: "Group.SubGroup.Subject1"},
+				{Title: "Group.SubGroup.Subject2"},
 			},
-			wantErr: ErrCardNotFound,
+			wantErr: errCardNotFound,
+		},
+		{
+			name:  "Card Empty Title",
+			group: "Group",
+			card:  Card{Title: ""},
+			want: []Card{
+				{Title: "Subject1"},
+				{Title: "Subject2"},
+				{Title: "Group.Subject1"},
+				{Title: "Group.Subject2"},
+				{Title: "Group.SubGroup.Subject1"},
+				{Title: "Group.SubGroup.Subject2"},
+			},
+			wantErr: ErrCardEmptyTitle,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &repositoryStub{}
-			repo.cards = []Card{
-				{Title: "Subject1"},
-				{Title: "Group.Subject1"},
-				{Title: "Group.Subject2"},
-				{Title: "Group.Subject3"},
-			}
+			repo := newRepositoryStubWithCards()
 			ds := New(repo)
 			err := ds.DeleteCard(tt.group, tt.card)
 

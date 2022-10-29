@@ -1,13 +1,29 @@
 package getting
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
 )
 
+var errGroupNotFound error = errors.New("Group not found")
+
 type repositoryStub struct {
 	cards []Card
+}
+
+func newRepositoryStubWithCards() *repositoryStub {
+	return &repositoryStub{
+		cards: []Card{
+			{Title: "Subject1", Desc: "Value1"},
+			{Title: "Subject2", Desc: "Value2"},
+			{Title: "Group.Subject1", Desc: "Value1"},
+			{Title: "Group.Subject2", Desc: "Value2"},
+			{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+			{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+		},
+	}
 }
 
 func (r *repositoryStub) GetCards(g string) ([]Card, error) {
@@ -36,7 +52,17 @@ func TestGetCards(t *testing.T) {
 			want: []Card{
 				{Title: "Group.Subject1", Desc: "Value1"},
 				{Title: "Group.Subject2", Desc: "Value2"},
-				{Title: "Group.Subject3", Desc: "Value3"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "SubGroup",
+			group: "Group.SubGroup",
+			want: []Card{
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -45,9 +71,11 @@ func TestGetCards(t *testing.T) {
 			group: "",
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: "Value1"},
 				{Title: "Group.Subject2", Desc: "Value2"},
-				{Title: "Group.Subject3", Desc: "Value3"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -55,19 +83,13 @@ func TestGetCards(t *testing.T) {
 			name:    "Group Not Found",
 			group:   "NotFound",
 			want:    []Card{},
-			wantErr: ErrGroupNotFound,
+			wantErr: errGroupNotFound,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &repositoryStub{}
-			repo.cards = []Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Group.Subject1", Desc: "Value1"},
-				{Title: "Group.Subject2", Desc: "Value2"},
-				{Title: "Group.Subject3", Desc: "Value3"},
-			}
+			repo := newRepositoryStubWithCards()
 			gs := New(repo)
 			got, err := gs.GetCards(tt.group)
 

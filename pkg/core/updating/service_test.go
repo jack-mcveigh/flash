@@ -1,12 +1,28 @@
 package updating
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
 
+var errCardNotFound error = errors.New("Card not found")
+
 type repositoryStub struct {
 	cards []Card
+}
+
+func newRepositoryStubWithCards() *repositoryStub {
+	return &repositoryStub{
+		cards: []Card{
+			{Title: "Subject1", Desc: "Value1"},
+			{Title: "Subject2", Desc: "Value2"},
+			{Title: "Group.Subject1", Desc: "Value1"},
+			{Title: "Group.Subject2", Desc: "Value2"},
+			{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+			{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+		},
+	}
 }
 
 func (r *repositoryStub) UpdateCard(g string, c Card) error {
@@ -20,7 +36,7 @@ func (r *repositoryStub) UpdateCard(g string, c Card) error {
 			return nil
 		}
 	}
-	return ErrCardNotFound
+	return errCardNotFound
 }
 
 func TestUpdateCard(t *testing.T) {
@@ -37,7 +53,11 @@ func TestUpdateCard(t *testing.T) {
 			card:  Card{Title: "Subject1", Desc: "Value2"},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -47,30 +67,55 @@ func TestUpdateCard(t *testing.T) {
 			card:  Card{Title: "Subject1", Desc: ""},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: ""},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
-
+		{
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			card:  Card{Title: "Subject1", Desc: "Value2"},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
 		{
 			name:  "No Group",
 			group: "",
 			card:  Card{Title: "Subject1", Desc: "Value2"},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value2"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
 		{
 			name:  "Card Not Found",
 			group: "Group",
-			card:  Card{Title: "Subject2", Desc: "Value2"},
+			card:  Card{Title: "Subject3", Desc: "Value2"},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
-			wantErr: ErrCardNotFound,
+			wantErr: errCardNotFound,
 		},
 		{
 			name:  "Empty Title",
@@ -78,7 +123,11 @@ func TestUpdateCard(t *testing.T) {
 			card:  Card{Title: "", Desc: "Value"},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: ErrCardEmptyTitle,
 		},
@@ -86,11 +135,7 @@ func TestUpdateCard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &repositoryStub{}
-			repo.cards = []Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Group.Subject1", Desc: "Value1"},
-			}
+			repo := newRepositoryStubWithCards()
 			us := New(repo)
 			err := us.UpdateCard(tt.group, tt.card)
 

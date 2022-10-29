@@ -33,6 +33,13 @@ func TestAddCard(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name:    "Sub Group",
+			group:   "Group.SubGroup",
+			card:    Card{Title: "Subject", Desc: "Value"},
+			want:    []Card{{Title: "Group.SubGroup.Subject", Desc: "Value"}},
+			wantErr: nil,
+		},
+		{
 			name:    "Empty Desc",
 			group:   "Group",
 			card:    Card{Title: "Subject", Desc: ""},
