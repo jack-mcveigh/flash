@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var errCardNotFound error = errors.New("Card not found")
+var errCardNotFound error = errors.New("card not found")
 
 type repositoryStub struct {
 	cards []Card

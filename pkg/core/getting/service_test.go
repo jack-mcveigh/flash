@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var errGroupNotFound error = errors.New("Group not found")
+var errGroupNotFound error = errors.New("group not found")
 
 type repositoryStub struct {
 	cards []Card
@@ -34,7 +34,7 @@ func (r *repositoryStub) GetCards(g string) ([]Card, error) {
 		}
 	}
 	if len(cards) == 0 {
-		return cards, ErrGroupNotFound
+		return cards, errGroupNotFound
 	}
 	return cards, nil
 }

@@ -2,7 +2,7 @@ package deleting
 
 import "errors"
 
-var ErrCardEmptyTitle error = errors.New("Card has an empty title")
+var ErrCardEmptyTitle error = errors.New("card has an empty title")
 
 type Service interface {
 	DeleteCard(string, Card) error
