@@ -3,7 +3,6 @@ package json
 import (
 	"encoding/json"
 	"errors"
-	"io/fs"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -56,39 +55,23 @@ func New() (*repository, error) {
 	return &repository{db, c}, err
 }
 
-func (r *repository) checkCardExists(coll, title string) (bool, error) {
-	err := r.db.Read(coll, title, &Card{})
-	switch err.(type) {
-	case *fs.PathError:
-		return false, nil
-	case nil:
-		return true, nil
-	default:
-		return false, err
+func (r *repository) checkCardExists(coll, title string) bool {
+	if err := r.db.Read(coll, title, &Card{}); err != nil {
+		return false
 	}
+	return true
 }
 
-func (r *repository) checkGroupExists(g string) (bool, error) {
-	p := dataPath + "/" + g
-	f, err := os.Open(p)
-	switch err.(type) {
-	case *fs.PathError:
-		return false, nil
-	case nil:
-		f.Close()
-		return true, nil
-	default:
-		return false, err
+func (r *repository) checkGroupExists(g string) bool {
+	if _, err := r.db.ReadAll(g); err != nil {
+		return false
 	}
+	return true
 }
 
 func (r *repository) AddCard(g string, c adding.Card) error {
 	subCollection := joinSubCollectionPath(cardCollection, g)
-	ok, err := r.checkCardExists(subCollection, c.Title)
-	if err != nil {
-		return err
-	}
-	if ok {
+	if ok := r.checkCardExists(subCollection, c.Title); ok {
 		return ErrCardFound
 	}
 
@@ -100,24 +83,16 @@ func (r *repository) AddCard(g string, c adding.Card) error {
 		Updated: t,
 	}
 
-	err = r.db.Write(subCollection, card.Title, card)
+	err := r.db.Write(subCollection, card.Title, card)
 	return err
 }
 
 func (r *repository) DeleteCard(g string, c deleting.Card) error {
 	subCollection := joinSubCollectionPath(cardCollection, g)
-	ok, err := r.checkGroupExists(subCollection)
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if ok := r.checkGroupExists(subCollection); !ok {
 		return ErrGroupNotFound
 	}
-	ok, err = r.checkCardExists(subCollection, c.Title)
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if ok := r.checkCardExists(subCollection, c.Title); !ok {
 		return ErrCardNotFound
 	}
 
@@ -164,11 +139,7 @@ func getCardsFromGroup(g string) ([]Card, error) {
 func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	cards := []getting.Card{}
 	subCollection := joinSubCollectionPath(cardCollection, g)
-	ok, err := r.checkGroupExists(subCollection)
-	if err != nil {
-		return cards, err
-	}
-	if !ok {
+	if ok := r.checkGroupExists(subCollection); !ok {
 		return cards, ErrGroupNotFound
 	}
 
@@ -185,24 +156,16 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 
 func (r *repository) UpdateCard(g string, c updating.Card) error {
 	subCollection := joinSubCollectionPath(cardCollection, g)
-	ok, err := r.checkGroupExists(subCollection)
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if ok := r.checkGroupExists(subCollection); !ok {
 		return ErrGroupNotFound
 	}
 
-	ok, err = r.checkCardExists(subCollection, c.Title)
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if ok := r.checkCardExists(subCollection, c.Title); !ok {
 		return ErrCardNotFound
 	}
 
 	card := &Card{}
-	if err = r.db.Read(subCollection, c.Title, &card); err != nil {
+	if err := r.db.Read(subCollection, c.Title, &card); err != nil {
 		return err
 	}
 
