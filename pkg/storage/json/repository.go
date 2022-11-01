@@ -26,11 +26,11 @@ var (
 	ErrGroupNotFound = errors.New("group not found")
 )
 
-func joinCollectionPaths(c, s string) string {
-	if s == "" {
-		return c
+func joinCollectionPaths(c1, c2 string) string {
+	if c1 == "" {
+		return c2
 	}
-	return c + "/" + strings.Replace(s, ".", "/", -1)
+	return c1 + "/" + strings.Replace(c2, ".", "/", -1)
 }
 
 type dbDriver interface {
