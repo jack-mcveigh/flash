@@ -26,11 +26,11 @@ var (
 	ErrGroupNotFound = errors.New("group not found")
 )
 
-func joinSubCollectionPath(c, s string) string {
-	if s != "" {
-		return c + "/" + strings.Replace(s, ".", "/", -1)
+func joinCollectionPaths(c, s string) string {
+	if s == "" {
+		return c
 	}
-	return c
+	return c + "/" + strings.Replace(s, ".", "/", -1)
 }
 
 type dbDriver interface {
@@ -70,7 +70,7 @@ func (r *repository) checkGroupExists(g string) bool {
 }
 
 func (r *repository) AddCard(g string, c adding.Card) error {
-	subCollection := joinSubCollectionPath(cardCollection, g)
+	subCollection := joinCollectionPaths(cardCollection, g)
 	if ok := r.checkCardExists(subCollection, c.Title); ok {
 		return ErrCardFound
 	}
@@ -88,7 +88,7 @@ func (r *repository) AddCard(g string, c adding.Card) error {
 }
 
 func (r *repository) DeleteCard(g string, c deleting.Card) error {
-	subCollection := joinSubCollectionPath(cardCollection, g)
+	subCollection := joinCollectionPaths(cardCollection, g)
 	if ok := r.checkGroupExists(subCollection); !ok {
 		return ErrGroupNotFound
 	}
@@ -138,7 +138,7 @@ func getCardsFromGroup(g string) ([]Card, error) {
 
 func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	cards := []getting.Card{}
-	subCollection := joinSubCollectionPath(cardCollection, g)
+	subCollection := joinCollectionPaths(cardCollection, g)
 	if ok := r.checkGroupExists(subCollection); !ok {
 		return cards, ErrGroupNotFound
 	}
@@ -156,7 +156,7 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 
 func (r *repository) UpdateCard(g string, c updating.Card) error {
 
-	subCollection := joinSubCollectionPath(cardCollection, g)
+	subCollection := joinCollectionPaths(cardCollection, g)
 	if ok := r.checkGroupExists(subCollection); !ok {
 		return ErrGroupNotFound
 	}

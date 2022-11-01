@@ -27,14 +27,14 @@ type dbDriverStub struct {
 
 func removeBaseCollection(coll string) string {
 	p := strings.Split(coll, "/")
-	return strings.Join(p[1:], "/")
+	return strings.Join(p[1:], ".")
 }
 
 func getCardPath(g, t string) string {
 	if g == "" {
 		return t
 	}
-	return g + "/" + t
+	return g + "." + t
 }
 
 func (d *dbDriverStub) Write(collection string, resource string, v any) error {
@@ -114,10 +114,10 @@ func newRepositoryWithDbAndClockStubsAndCards() (*repository, *dbDriverStub) {
 	db.cards = []Card{
 		{Title: "Subject1", Desc: "Value1"},
 		{Title: "Subject2", Desc: "Value2"},
-		{Title: "Group/Subject1", Desc: "Value1"},
-		{Title: "Group/Subject2", Desc: "Value2"},
-		{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-		{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+		{Title: "Group.Subject1", Desc: "Value1"},
+		{Title: "Group.Subject2", Desc: "Value2"},
+		{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+		{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 	}
 	return r, db
 }
@@ -134,21 +134,21 @@ func TestAddCardSingle(t *testing.T) {
 			name:    "Normal",
 			group:   "Group",
 			card:    adding.Card{Title: "Subject1", Desc: "Value1"},
-			want:    []Card{{Title: "Group/Subject1", Desc: "Value1"}},
+			want:    []Card{{Title: "Group.Subject1", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Title",
 			group:   "Group",
 			card:    adding.Card{Title: "", Desc: "Value1"},
-			want:    []Card{{Title: "Group/", Desc: "Value1"}},
+			want:    []Card{{Title: "Group.", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Desc",
 			group:   "Group",
 			card:    adding.Card{Title: "Subject1", Desc: ""},
-			want:    []Card{{Title: "Group/Subject1", Desc: ""}},
+			want:    []Card{{Title: "Group.Subject1", Desc: ""}},
 			wantErr: nil,
 		},
 		{
@@ -192,8 +192,8 @@ func TestAddCardMultiple(t *testing.T) {
 				{Title: "Subject2", Desc: "Value2"},
 			},
 			want: []Card{
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -205,7 +205,7 @@ func TestAddCardMultiple(t *testing.T) {
 				{Title: "Subject1", Desc: "Value2"},
 			},
 			want: []Card{
-				{Title: "Group/Subject1", Desc: "Value1"},
+				{Title: "Group.Subject1", Desc: "Value1"},
 			},
 			wantErr: ErrCardFound,
 		},
@@ -258,9 +258,9 @@ func TestDeleteCardSingle(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -271,10 +271,10 @@ func TestDeleteCardSingle(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: ErrCardNotFound,
 		},
@@ -284,10 +284,10 @@ func TestDeleteCardSingle(t *testing.T) {
 			card:  deleting.Card{Title: "Subject1"},
 			want: []Card{
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -325,13 +325,13 @@ func TestDeleteCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 		{
 			name:  "Sub Group",
-			group: "Group/SubGroup",
+			group: "Group.SubGroup",
 			cards: []deleting.Card{
 				{Title: "Subject1"},
 				{Title: "Subject2"},
@@ -339,8 +339,8 @@ func TestDeleteCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
 			},
 		},
 		{
@@ -354,8 +354,8 @@ func TestDeleteCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 		{
@@ -366,10 +366,10 @@ func TestDeleteCardMultiple(t *testing.T) {
 				{Title: "Subject2"},
 			},
 			want: []Card{
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 	}
@@ -400,19 +400,19 @@ func TestGetCards(t *testing.T) {
 			name:  "Normal",
 			group: "Group",
 			want: []getting.Card{
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
 		{
 			name:  "Sub Group",
-			group: "Group/SubGroup",
+			group: "Group.SubGroup",
 			want: []getting.Card{
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -422,10 +422,10 @@ func TestGetCards(t *testing.T) {
 			want: []getting.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -462,24 +462,24 @@ func TestUpdateCardSingle(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value2"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
 		{
 			name:  "Sub Group",
-			group: "Group/SubGroup",
+			group: "Group.SubGroup",
 			card:  updating.Card{Title: "Subject1", Desc: "Value2"},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -490,10 +490,10 @@ func TestUpdateCardSingle(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: ""},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: ""},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -504,10 +504,10 @@ func TestUpdateCardSingle(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: ErrCardNotFound,
 		},
@@ -546,15 +546,15 @@ func TestUpdateCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value2"},
-				{Title: "Group/Subject2", Desc: "Value3"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value3"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 		{
 			name:  "Sub Group",
-			group: "Group/SubGroup",
+			group: "Group.SubGroup",
 			cards: []updating.Card{
 				{Title: "Subject1", Desc: "Value2"},
 				{Title: "Subject2", Desc: "Value3"},
@@ -562,10 +562,10 @@ func TestUpdateCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value1"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value3"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value3"},
 			},
 		},
 		{
@@ -578,10 +578,10 @@ func TestUpdateCardMultiple(t *testing.T) {
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group/Subject1", Desc: "Value2"},
-				{Title: "Group/Subject2", Desc: "Value2"},
-				{Title: "Group/SubGroup/Subject1", Desc: "Value1"},
-				{Title: "Group/SubGroup/Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 	}
