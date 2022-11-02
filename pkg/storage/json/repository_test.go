@@ -74,8 +74,9 @@ func (d *dbDriverStub) Read(collection, resource string, v any) error {
 
 func (d *dbDriverStub) ReadAll(collection string) ([]string, error) {
 	var resources []string
+	g := removeBaseCollection(collection)
 	for _, c := range d.cards {
-		if !strings.HasPrefix(c.Title, collection) {
+		if strings.HasPrefix(c.Title, g) {
 			b, err := json.Marshal(c)
 			if err != nil {
 				return resources, err
@@ -398,6 +399,19 @@ func TestGetCards(t *testing.T) {
 	}{
 		{
 			name:  "Normal",
+			group: "",
+			want: []getting.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Group",
 			group: "Group",
 			want: []getting.Card{
 				{Title: "Group.Subject1", Desc: "Value1"},
@@ -417,17 +431,10 @@ func TestGetCards(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:  "Empty Group",
-			group: "",
-			want: []getting.Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Group.Subject1", Desc: "Value1"},
-				{Title: "Group.Subject2", Desc: "Value2"},
-				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
-				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
-			},
-			wantErr: nil,
+			name:    "Group Not Found",
+			group:   "NotAGroup",
+			want:    []getting.Card{},
+			wantErr: ErrGroupNotFound,
 		},
 	}
 

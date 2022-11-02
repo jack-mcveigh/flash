@@ -3,9 +3,7 @@ package json
 import (
 	"encoding/json"
 	"errors"
-	"os"
 	"os/user"
-	"path/filepath"
 	"strings"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
@@ -91,43 +89,6 @@ func (r *repository) DeleteCard(g string, c deleting.Card) error {
 	return r.db.Delete(subCollection, c.Title)
 }
 
-func getCardsFromGroup(g string) ([]Card, error) {
-	p := dataPath + "/" + g
-
-	cards := []Card{}
-	f, err := os.Open(p)
-	if err != nil {
-		return cards, ErrGroupNotFound
-	}
-	defer f.Close()
-
-	items, err := f.ReadDir(0)
-	if err != nil {
-		return cards, err
-	}
-
-	for _, i := range items {
-		if i.IsDir() || filepath.Ext(i.Name()) != ".json" {
-			continue
-		}
-
-		jsonFile, err := os.Open(filepath.Join(p, i.Name()))
-		if err != nil {
-			return cards, err
-		}
-		defer jsonFile.Close()
-
-		var c Card
-		err = json.NewDecoder(jsonFile).Decode(&c)
-		if err != nil {
-			return cards, err
-		}
-
-		cards = append(cards, c)
-	}
-	return cards, nil
-}
-
 func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	cards := []getting.Card{}
 	subCollection := joinCollectionPaths(cardCollection, g)
@@ -135,12 +96,16 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 		return cards, ErrGroupNotFound
 	}
 
-	cs, err := getCardsFromGroup(subCollection)
+	items, err := r.db.ReadAll(subCollection)
 	if err != nil {
 		return cards, err
 	}
 
-	for _, c := range cs {
+	var c getting.Card
+	for _, item := range items {
+		if err := json.Unmarshal([]byte(item), &c); err != nil {
+			return cards, err
+		}
 		cards = append(cards, getting.Card{Title: c.Title, Desc: c.Desc})
 	}
 	return cards, nil
