@@ -11,6 +11,7 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
 	"github.com/jmcveigh55/flash/pkg/storage"
+	"github.com/jmcveigh55/flash/pkg/storage/json/db"
 )
 
 const cardCollection = "card"
@@ -31,7 +32,7 @@ func joinCollectionPaths(c1, c2 string) string {
 }
 
 type repository struct {
-	db    DBDriver
+	db    db.Driver
 	clock storage.Clock
 }
 
@@ -40,7 +41,7 @@ func New() (*repository, error) {
 	if err == nil {
 		dataPath = usr.HomeDir + "/.flash"
 	}
-	db, err := newDb(dataPath)
+	db, err := db.New(dataPath)
 	c := storage.NewClock()
 	return &repository{db, c}, err
 }

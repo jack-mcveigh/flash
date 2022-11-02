@@ -1,4 +1,4 @@
-package json
+package db
 
 import (
 	"errors"
@@ -8,20 +8,20 @@ import (
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 
-type DBDriver interface {
+type Driver interface {
 	Write(string, string, any) error
 	Read(string, string, any) error
 	ReadAll(string) ([]string, error)
 	Delete(string, string) error
 }
 
-type dbDriver struct {
+type driver struct {
 	db  *scribble.Driver
 	dir string
 }
 
-func newDb(p string) (*dbDriver, error) {
-	d := &dbDriver{}
+func New(p string) (*driver, error) {
+	d := &driver{}
 	db, err := scribble.New(p, nil)
 	if err != nil {
 		return d, err
@@ -31,15 +31,15 @@ func newDb(p string) (*dbDriver, error) {
 	return d, nil
 }
 
-func (d *dbDriver) Write(collection, resource string, v any) error {
+func (d *driver) Write(collection, resource string, v any) error {
 	return d.db.Write(collection, resource, v)
 }
 
-func (d *dbDriver) Read(collection, resource string, v any) error {
+func (d *driver) Read(collection, resource string, v any) error {
 	return d.db.Read(collection, resource, v)
 }
 
-func (d *dbDriver) ReadAll(collection string) ([]string, error) {
+func (d *driver) ReadAll(collection string) ([]string, error) {
 	var records []string
 
 	if collection == "" {
@@ -81,6 +81,6 @@ func (d *dbDriver) ReadAll(collection string) ([]string, error) {
 	return records, nil
 }
 
-func (d *dbDriver) Delete(collection, resource string) error {
+func (d *driver) Delete(collection, resource string) error {
 	return d.db.Delete(collection, resource)
 }
