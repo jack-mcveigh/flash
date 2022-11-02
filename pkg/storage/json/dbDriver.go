@@ -63,7 +63,10 @@ func (d *dbDriver) ReadAll(collection string) ([]string, error) {
 	}
 
 	for _, item := range items {
-		if item.IsDir() || filepath.Ext(item.Name()) != ".json" {
+		if item.IsDir() {
+			d.ReadAll(filepath.Join(collection, item.Name()))
+		}
+		if filepath.Ext(item.Name()) != ".json" {
 			continue
 		}
 
