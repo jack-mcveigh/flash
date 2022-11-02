@@ -13,7 +13,6 @@ import (
 	"github.com/jmcveigh55/flash/pkg/core/getting"
 	"github.com/jmcveigh55/flash/pkg/core/updating"
 	"github.com/jmcveigh55/flash/pkg/storage"
-	scribble "github.com/nanobox-io/golang-scribble"
 )
 
 const cardCollection = "card"
@@ -33,15 +32,8 @@ func joinCollectionPaths(c1, c2 string) string {
 	return c1 + "/" + strings.Replace(c2, ".", "/", -1)
 }
 
-type dbDriver interface {
-	Write(string, string, any) error
-	Read(string, string, any) error
-	ReadAll(string) ([]string, error)
-	Delete(string, string) error
-}
-
 type repository struct {
-	db    dbDriver
+	db    DBDriver
 	clock storage.Clock
 }
 
@@ -50,7 +42,7 @@ func New() (*repository, error) {
 	if err == nil {
 		dataPath = usr.HomeDir + "/.flash"
 	}
-	db, err := scribble.New(dataPath, nil)
+	db, err := newDb(dataPath)
 	c := storage.NewClock()
 	return &repository{db, c}, err
 }
