@@ -2,14 +2,14 @@ package deleting
 
 import "errors"
 
-var ErrCardNotFound error = errors.New("Card not found")
+var ErrCardEmptyTitle error = errors.New("card has an empty title")
 
 type Service interface {
-	DeleteCard(Card) error
+	DeleteCard(string, Card) error
 }
 
 type Repository interface {
-	DeleteCard(Card) error
+	DeleteCard(string, Card) error
 }
 
 type service struct {
@@ -20,6 +20,9 @@ func New(r Repository) *service {
 	return &service{r}
 }
 
-func (s *service) DeleteCard(c Card) error {
-	return s.r.DeleteCard(c)
+func (s *service) DeleteCard(g string, c Card) error {
+	if c.Title == "" {
+		return ErrCardEmptyTitle
+	}
+	return s.r.DeleteCard(g, c)
 }

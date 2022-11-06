@@ -2,6 +2,7 @@ package memory
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -11,8 +12,9 @@ import (
 )
 
 var (
-	ErrCardAlreadyExists = errors.New("Card already exists")
-	ErrCardNotFound      = errors.New("Card not found")
+	ErrCardFound     = errors.New("card already exists")
+	ErrCardNotFound  = errors.New("card not found")
+	ErrGroupNotFound = errors.New("group not found")
 )
 
 type repository struct {
@@ -26,10 +28,19 @@ func New() *repository {
 	return r
 }
 
-func (r *repository) AddCard(c adding.Card) error {
+func getCardPath(g, t string) string {
+	if g == "" {
+		return t
+	}
+	return g + "." + t
+}
+
+func (r *repository) AddCard(g string, c adding.Card) error {
+	cardPath := getCardPath(g, c.Title)
+
 	for _, card := range r.cards {
-		if card.Title == c.Title {
-			return ErrCardAlreadyExists
+		if card.Title == cardPath {
+			return ErrCardFound
 		}
 	}
 
@@ -37,7 +48,7 @@ func (r *repository) AddCard(c adding.Card) error {
 	r.cards = append(
 		r.cards,
 		Card{
-			Title:   c.Title,
+			Title:   cardPath,
 			Desc:    c.Desc,
 			Created: t,
 			Updated: t,
@@ -46,10 +57,12 @@ func (r *repository) AddCard(c adding.Card) error {
 	return nil
 }
 
-func (r *repository) DeleteCard(c deleting.Card) error {
+func (r *repository) DeleteCard(g string, c deleting.Card) error {
+	cardPath := getCardPath(g, c.Title)
+
 	index := -1
 	for i, card := range r.cards {
-		if c.Title == card.Title {
+		if card.Title == cardPath {
 			index = i
 		}
 	}
@@ -62,20 +75,29 @@ func (r *repository) DeleteCard(c deleting.Card) error {
 	return nil
 }
 
-func (r *repository) GetCards() ([]getting.Card, error) {
+func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	var cards []getting.Card
 	for _, c := range r.cards {
-		cards = append(cards, getting.Card{
-			Title: c.Title,
-			Desc:  c.Desc,
-		})
+		if strings.HasPrefix(c.Title, g) {
+			cards = append(cards, getting.Card{
+				Title: c.Title,
+				Desc:  c.Desc,
+			})
+		}
 	}
+
+	if len(cards) == 0 {
+		return cards, ErrGroupNotFound
+	}
+
 	return cards, nil
 }
 
-func (r *repository) UpdateCard(c updating.Card) error {
+func (r *repository) UpdateCard(g string, c updating.Card) error {
+	cardPath := getCardPath(g, c.Title)
+
 	for i := range r.cards {
-		if r.cards[i].Title == c.Title {
+		if r.cards[i].Title == cardPath {
 			r.cards[i].Desc = c.Desc
 			r.cards[i].Updated = r.clock.Now()
 			return nil
