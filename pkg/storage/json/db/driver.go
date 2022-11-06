@@ -12,6 +12,7 @@ type Driver interface {
 	Write(string, string, any) error
 	Read(string, string, any) error
 	ReadAll(string) ([]string, error)
+	ReadAllRecursive(string) ([]string, error)
 	Delete(string, string) error
 }
 
@@ -40,6 +41,48 @@ func (d *driver) Read(collection, resource string, v any) error {
 }
 
 func (d *driver) ReadAll(collection string) ([]string, error) {
+	var records []string
+
+	if collection == "" {
+		return nil, errors.New("collection is missing")
+	}
+
+	dir := filepath.Join(d.dir, collection)
+	if _, err := os.Stat(d.dir); os.IsNotExist(err) {
+		return records, err
+	}
+
+	f, err := os.Open(dir)
+	if err != nil {
+		return records, errors.New("unable to read collection directory")
+	}
+	defer f.Close()
+
+	items, err := f.ReadDir(0)
+	if err != nil {
+		return records, err
+	}
+
+	for _, item := range items {
+		if item.IsDir() {
+			continue
+		}
+		if filepath.Ext(item.Name()) != ".json" {
+			continue
+		}
+
+		b, err := os.ReadFile(filepath.Join(dir, item.Name()))
+		if err != nil {
+			return records, err
+		}
+
+		records = append(records, string(b))
+	}
+
+	return records, nil
+}
+
+func (d *driver) ReadAllRecursive(collection string) ([]string, error) {
 	var records []string
 
 	if collection == "" {

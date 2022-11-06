@@ -316,6 +316,58 @@ func TestGetCards(t *testing.T) {
 			want: []getting.Card{
 				{Title: "Group.Subject1", Desc: "Value1"},
 				{Title: "Group.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			want: []getting.Card{
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Empty Group",
+			group: "",
+			want: []getting.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := newRepositoryWithClockStubAndCards()
+			cards, err := r.GetCards(tt.group)
+
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
+			}
+
+			if !reflect.DeepEqual(tt.want, cards) {
+				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, cards)
+			}
+		})
+	}
+}
+
+func TestGetAllCards(t *testing.T) {
+	tests := []struct {
+		name    string
+		group   string
+		want    []getting.Card
+		wantErr error
+	}{
+		{
+			name:  "Normal",
+			group: "Group",
+			want: []getting.Card{
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
 				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
 				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
@@ -348,7 +400,7 @@ func TestGetCards(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := newRepositoryWithClockStubAndCards()
-			cards, err := r.GetCards(tt.group)
+			cards, err := r.GetAllCards(tt.group)
 
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
