@@ -3,23 +3,41 @@
 ## Adding a Card
 
 ```bash
-flash add -g group -t title -d "A desc."
+flash add -t "title" -d "A desc." <group>
+```
+
+OR
+
+```bash
+flash add -t "group.title" -d "A desc."
 ```
 
 ## Updating a Card
 
 ```bash
-flash update -g group -t title -d "New desc."
+flash update -t "title" -d "New desc." <group>
+```
+
+OR
+
+```bash
+flash add -t "group.title" -d "New desc."
 ```
 
 ## Removing a Card
 
 ```bash
-flash remove -g group -t title
+flash remove -t "title" <group>
+```
+
+OR
+
+```bash
+flash remove -t "group.title"
 ```
 
 ## Getting a Group
 
 ```bash
-flash get -g group
+flash get <group>
 ```
