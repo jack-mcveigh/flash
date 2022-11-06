@@ -78,6 +78,26 @@ func (r *repository) DeleteCard(g string, c deleting.Card) error {
 func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	var cards []getting.Card
 	for _, c := range r.cards {
+		items := strings.Split(c.Title, ".")
+		p := strings.Join(items[:len(items)-1], ".") // Strip card from title
+		if p == g {
+			cards = append(cards, getting.Card{
+				Title: c.Title,
+				Desc:  c.Desc,
+			})
+		}
+	}
+
+	if len(cards) == 0 {
+		return cards, ErrGroupNotFound
+	}
+
+	return cards, nil
+}
+
+func (r *repository) GetAllCards(g string) ([]getting.Card, error) {
+	var cards []getting.Card
+	for _, c := range r.cards {
 		if strings.HasPrefix(c.Title, g) {
 			cards = append(cards, getting.Card{
 				Title: c.Title,
