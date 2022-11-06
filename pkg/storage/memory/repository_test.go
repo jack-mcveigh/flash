@@ -17,27 +17,57 @@ func (c *clockStub) Now() time.Time {
 	return time.Time{}
 }
 
+func newRepositoryWithClockStub() *repository {
+	r := &repository{}
+	r.clock = &clockStub{}
+	return r
+}
+
+func newRepositoryWithClockStubAndCards() *repository {
+	r := newRepositoryWithClockStub()
+	r.cards = []Card{
+		{Title: "Subject1", Desc: "Value1"},
+		{Title: "Subject2", Desc: "Value2"},
+		{Title: "Group.Subject1", Desc: "Value1"},
+		{Title: "Group.Subject2", Desc: "Value2"},
+		{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+		{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+	}
+	return r
+}
+
 func TestAddCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
+		group   string
 		card    adding.Card
 		want    []Card
 		wantErr error
 	}{
 		{
 			name:    "Normal",
+			group:   "Group",
 			card:    adding.Card{Title: "Subject1", Desc: "Value1"},
-			want:    []Card{{Title: "Subject1", Desc: "Value1"}},
+			want:    []Card{{Title: "Group.Subject1", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Title",
+			group:   "Group",
 			card:    adding.Card{Title: "", Desc: "Value1"},
-			want:    []Card{{Title: "", Desc: "Value1"}},
+			want:    []Card{{Title: "Group.", Desc: "Value1"}},
 			wantErr: nil,
 		},
 		{
 			name:    "Empty Desc",
+			group:   "Group",
+			card:    adding.Card{Title: "Subject1", Desc: ""},
+			want:    []Card{{Title: "Group.Subject1", Desc: ""}},
+			wantErr: nil,
+		},
+		{
+			name:    "Empty Group",
+			group:   "",
 			card:    adding.Card{Title: "Subject1", Desc: ""},
 			want:    []Card{{Title: "Subject1", Desc: ""}},
 			wantErr: nil,
@@ -46,9 +76,8 @@ func TestAddCardSingle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
-			err := r.AddCard(tt.card)
+			r := newRepositoryWithClockStub()
+			err := r.AddCard(tt.group, tt.card)
 
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
@@ -64,12 +93,39 @@ func TestAddCardSingle(t *testing.T) {
 func TestAddCardMultiple(t *testing.T) {
 	tests := []struct {
 		name    string
+		group   string
 		cards   []adding.Card
 		want    []Card
 		wantErr error
 	}{
 		{
-			name: "Normal",
+			name:  "Normal",
+			group: "Group",
+			cards: []adding.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+			},
+			want: []Card{
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Duplicate Title",
+			group: "Group",
+			cards: []adding.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject1", Desc: "Value2"},
+			},
+			want: []Card{
+				{Title: "Group.Subject1", Desc: "Value1"},
+			},
+			wantErr: ErrCardFound,
+		},
+		{
+			name:  "Empty Group",
+			group: "",
 			cards: []adding.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
@@ -80,26 +136,14 @@ func TestAddCardMultiple(t *testing.T) {
 			},
 			wantErr: nil,
 		},
-		{
-			name: "Duplicate Title",
-			cards: []adding.Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject1", Desc: "Value2"},
-			},
-			want: []Card{
-				{Title: "Subject1", Desc: "Value1"},
-			},
-			wantErr: ErrCardAlreadyExists,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
+			r := newRepositoryWithClockStub()
 			var err error
 			for _, c := range tt.cards {
-				err = r.AddCard(c)
+				err = r.AddCard(tt.group, c)
 			}
 
 			if err != tt.wantErr {
@@ -116,50 +160,57 @@ func TestAddCardMultiple(t *testing.T) {
 func TestDeleteCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
+		group   string
 		card    deleting.Card
 		want    []Card
 		wantErr error
 	}{
 		{
-			name: "Delete First",
-			card: deleting.Card{Title: "Subject1"},
+			name:  "Normal",
+			group: "Group",
+			card:  deleting.Card{Title: "Subject1"},
 			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Subject3", Desc: "Value3"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
 		{
-			name: "Delete Last",
-			card: deleting.Card{Title: "Subject3"},
+			name:  "Card not found",
+			group: "Group",
+			card:  deleting.Card{Title: "Subject3"},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-			},
-			wantErr: nil,
-		},
-		{
-			name: "Card not found",
-			card: deleting.Card{Title: "Subject4"},
-			want: []Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Subject3", Desc: "Value3"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: ErrCardNotFound,
+		},
+		{
+			name:  "Empty Group",
+			group: "",
+			card:  deleting.Card{Title: "Subject1"},
+			want: []Card{
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
-			r.cards = []Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Subject3", Desc: "Value3"},
-			}
-			err := r.DeleteCard(tt.card)
+			r := newRepositoryWithClockStubAndCards()
+			err := r.DeleteCard(tt.group, tt.card)
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
 			}
@@ -174,41 +225,75 @@ func TestDeleteCardSingle(t *testing.T) {
 func TestDeleteCardMultiple(t *testing.T) {
 	tests := []struct {
 		name  string
+		group string
 		cards []deleting.Card
 		want  []Card
 	}{
 		{
-			name: "Normal",
+			name:  "Normal",
+			group: "Group",
+			cards: []deleting.Card{
+				{Title: "Subject1"},
+				{Title: "Subject2"},
+			},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+		},
+		{
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			cards: []deleting.Card{
+				{Title: "Subject1"},
+				{Title: "Subject2"},
+			},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+			},
+		},
+		{
+			name:  "One Card Not Found",
+			group: "Group",
 			cards: []deleting.Card{
 				{Title: "Subject1"},
 				{Title: "Subject2"},
 				{Title: "Subject3"},
 			},
-			want: []Card{},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
 		},
 		{
-			name: "One Card Not Found",
+			name:  "Empty Group",
+			group: "",
 			cards: []deleting.Card{
+				{Title: "Subject1"},
 				{Title: "Subject2"},
-				{Title: "Subject3"},
-				{Title: "Subject4"},
 			},
-			want: []Card{{Title: "Subject1", Desc: "Value1"}},
+			want: []Card{
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
-			r.cards = []Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Subject3", Desc: "Value3"},
-			}
+			r := newRepositoryWithClockStubAndCards()
 
 			for _, c := range tt.cards {
-				r.DeleteCard(c)
+				r.DeleteCard(tt.group, c)
 			}
 
 			if !reflect.DeepEqual(tt.want, r.cards) {
@@ -221,20 +306,40 @@ func TestDeleteCardMultiple(t *testing.T) {
 func TestGetCards(t *testing.T) {
 	tests := []struct {
 		name    string
+		group   string
 		want    []getting.Card
 		wantErr error
 	}{
 		{
-			name:    "Single Card",
-			want:    []getting.Card{{Title: "Subject1", Desc: "Value1"}},
+			name:  "Normal",
+			group: "Group",
+			want: []getting.Card{
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
 			wantErr: nil,
 		},
 		{
-			name: "Multiple Cards",
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			want: []getting.Card{
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Empty Group",
+			group: "",
 			want: []getting.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
-				{Title: "Subject3", Desc: "Value3"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 			wantErr: nil,
 		},
@@ -242,12 +347,8 @@ func TestGetCards(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
-			for _, c := range tt.want {
-				r.cards = append(r.cards, Card{Title: c.Title, Desc: c.Desc})
-			}
-			cards, err := r.GetCards()
+			r := newRepositoryWithClockStubAndCards()
+			cards, err := r.GetCards(tt.group)
 
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
@@ -263,36 +364,73 @@ func TestGetCards(t *testing.T) {
 func TestUpdateCardSingle(t *testing.T) {
 	tests := []struct {
 		name    string
+		group   string
 		card    updating.Card
 		want    []Card
 		wantErr error
 	}{
 		{
-			name:    "Normal",
-			card:    updating.Card{Title: "Subject1", Desc: "Value2"},
-			want:    []Card{{Title: "Subject1", Desc: "Value2"}},
+			name:  "Normal",
+			group: "Group",
+			card:  updating.Card{Title: "Subject1", Desc: "Value2"},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
 			wantErr: nil,
 		},
 		{
-			name:    "Empty Title",
-			card:    updating.Card{Title: "Subject2", Desc: "Value2"},
-			want:    []Card{{Title: "Subject1", Desc: "Value1"}},
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			card:  updating.Card{Title: "Subject1", Desc: "Value2"},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Empty Desc",
+			group: "Group",
+			card:  updating.Card{Title: "Subject1", Desc: ""},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: ""},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Card Not Found",
+			group: "Group",
+			card:  updating.Card{Title: "Subject3", Desc: "Value3"},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
 			wantErr: ErrCardNotFound,
-		},
-		{
-			name:    "Empty Desc",
-			card:    updating.Card{Title: "Subject1", Desc: ""},
-			want:    []Card{{Title: "Subject1", Desc: ""}},
-			wantErr: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
-			r.cards = []Card{{Title: "Subject1", Desc: "Value1"}}
-			err := r.UpdateCard(tt.card)
+			r := newRepositoryWithClockStubAndCards()
+			err := r.UpdateCard(tt.group, tt.card)
 
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
@@ -308,44 +446,66 @@ func TestUpdateCardSingle(t *testing.T) {
 func TestUpdateCardMultiple(t *testing.T) {
 	tests := []struct {
 		name  string
+		group string
 		cards []updating.Card
 		want  []Card
 	}{
 		{
-			name: "Normal",
+			name:  "Normal",
+			group: "Group",
 			cards: []updating.Card{
-				{Title: "Subject1", Desc: "Value3"},
-				{Title: "Subject2", Desc: "Value4"},
+				{Title: "Subject1", Desc: "Value2"},
+				{Title: "Subject2", Desc: "Value3"},
 			},
 			want: []Card{
-				{Title: "Subject1", Desc: "Value3"},
-				{Title: "Subject2", Desc: "Value4"},
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value3"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 		{
-			name: "One Card Not Found",
+			name:  "Sub Group",
+			group: "Group.SubGroup",
 			cards: []updating.Card{
+				{Title: "Subject1", Desc: "Value2"},
 				{Title: "Subject2", Desc: "Value3"},
+			},
+			want: []Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value3"},
+			},
+		},
+		{
+			name:  "One Card Not Found",
+			group: "Group",
+			cards: []updating.Card{
+				{Title: "Subject1", Desc: "Value2"},
 				{Title: "Subject3", Desc: "Value4"},
 			},
 			want: []Card{
 				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject2", Desc: "Value3"},
+				{Title: "Subject2", Desc: "Value2"},
+				{Title: "Group.Subject1", Desc: "Value2"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &repository{}
-			r.clock = &clockStub{}
-			r.cards = []Card{
-				{Title: "Subject1", Desc: "Value1"},
-				{Title: "Subject2", Desc: "Value2"},
-			}
+			r := newRepositoryWithClockStubAndCards()
 
 			for _, c := range tt.cards {
-				r.UpdateCard(c)
+				r.UpdateCard(tt.group, c)
 			}
 
 			if !reflect.DeepEqual(tt.want, r.cards) {
