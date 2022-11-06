@@ -1,4 +1,4 @@
-name: Test Support
+name: Test Pull Request
 on: [pull_request]
 
 jobs:
