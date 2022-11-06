@@ -64,7 +64,12 @@ func (d *driver) ReadAll(collection string) ([]string, error) {
 
 	for _, item := range items {
 		if item.IsDir() {
-			d.ReadAll(filepath.Join(collection, item.Name()))
+			r, err := d.ReadAll(filepath.Join(collection, item.Name()))
+			if err != nil {
+				return records, err
+			}
+
+			records = append(records, r...)
 		}
 		if filepath.Ext(item.Name()) != ".json" {
 			continue
