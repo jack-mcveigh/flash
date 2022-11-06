@@ -13,7 +13,10 @@ import (
 )
 
 func main() {
-	r, _ := json.New()
+	r, err := json.New()
+	if err != nil {
+		log.Fatal("unable to instantiate repo: " + err.Error())
+	}
 	a := adding.New(r)
 	d := deleting.New(r)
 	g := getting.New(r)
