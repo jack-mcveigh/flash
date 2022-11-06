@@ -112,6 +112,28 @@ func (r *repository) GetCards(g string) ([]getting.Card, error) {
 	return cards, nil
 }
 
+func (r *repository) GetAllCards(g string) ([]getting.Card, error) {
+	cards := []getting.Card{}
+	subCollection := joinCollectionPaths(cardCollection, g)
+	if ok := r.checkGroupExists(subCollection); !ok {
+		return cards, ErrGroupNotFound
+	}
+
+	items, err := r.db.ReadAllRecursive(subCollection)
+	if err != nil {
+		return cards, err
+	}
+
+	var c getting.Card
+	for _, item := range items {
+		if err := json.Unmarshal([]byte(item), &c); err != nil {
+			return cards, err
+		}
+		cards = append(cards, getting.Card{Title: c.Title, Desc: c.Desc})
+	}
+	return cards, nil
+}
+
 func (r *repository) UpdateCard(g string, c updating.Card) error {
 
 	subCollection := joinCollectionPaths(cardCollection, g)

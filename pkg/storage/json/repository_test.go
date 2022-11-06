@@ -76,7 +76,9 @@ func (d *dbDriverStub) ReadAll(collection string) ([]string, error) {
 	var resources []string
 	g := removeBaseCollection(collection)
 	for _, c := range d.cards {
-		if strings.HasPrefix(c.Title, g) {
+		items := strings.Split(c.Title, ".")
+		p := strings.Join(items[:len(items)-1], ".") // Strip card from title
+		if p == g {
 			b, err := json.Marshal(c)
 			if err != nil {
 				return resources, err
@@ -422,6 +424,64 @@ func TestGetCards(t *testing.T) {
 			want: []getting.Card{
 				{Title: "Subject1", Desc: "Value1"},
 				{Title: "Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Group",
+			group: "Group",
+			want: []getting.Card{
+				{Title: "Group.Subject1", Desc: "Value1"},
+				{Title: "Group.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:  "Sub Group",
+			group: "Group.SubGroup",
+			want: []getting.Card{
+				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
+				{Title: "Group.SubGroup.Subject2", Desc: "Value2"},
+			},
+			wantErr: nil,
+		},
+		{
+			name:    "Group Not Found",
+			group:   "NotAGroup",
+			want:    []getting.Card{},
+			wantErr: ErrGroupNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, _ := newRepositoryWithDbAndClockStubsAndCards()
+			cards, err := r.GetCards(tt.group)
+
+			if err != tt.wantErr {
+				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
+			}
+
+			if !reflect.DeepEqual(tt.want, cards) {
+				t.Errorf("Incorrect cards. Want %v, got %v", tt.want, cards)
+			}
+		})
+	}
+}
+
+func TestGetAllCards(t *testing.T) {
+	tests := []struct {
+		name    string
+		group   string
+		want    []getting.Card
+		wantErr error
+	}{
+		{
+			name:  "Normal",
+			group: "",
+			want: []getting.Card{
+				{Title: "Subject1", Desc: "Value1"},
+				{Title: "Subject2", Desc: "Value2"},
 				{Title: "Group.Subject1", Desc: "Value1"},
 				{Title: "Group.Subject2", Desc: "Value2"},
 				{Title: "Group.SubGroup.Subject1", Desc: "Value1"},
@@ -460,7 +520,7 @@ func TestGetCards(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := newRepositoryWithDbAndClockStubsAndCards()
-			cards, err := r.GetCards(tt.group)
+			cards, err := r.GetAllCards(tt.group)
 
 			if err != tt.wantErr {
 				t.Errorf("Incorrect error. Want %v, got %v", tt.wantErr, err)
