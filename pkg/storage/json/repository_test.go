@@ -91,6 +91,25 @@ func (d *dbDriverStub) ReadAll(collection string) ([]string, error) {
 	return resources, nil
 }
 
+func (d *dbDriverStub) ReadAllRecursive(collection string) ([]string, error) {
+	var resources []string
+	g := removeBaseCollection(collection)
+	for _, c := range d.cards {
+		if strings.HasPrefix(c.Title, g) {
+			b, err := json.Marshal(c)
+			if err != nil {
+				return resources, err
+			}
+			resources = append(resources, string(b))
+		}
+	}
+	if len(resources) == 0 {
+		return resources, errors.New("collection not found")
+	}
+
+	return resources, nil
+}
+
 func (d *dbDriverStub) Delete(collection string, resource string) error {
 	for i, c := range d.cards {
 		g := removeBaseCollection(collection)
