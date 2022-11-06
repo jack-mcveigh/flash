@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jmcveigh55/flash/pkg/core/adding"
 	"github.com/jmcveigh55/flash/pkg/core/deleting"
@@ -21,7 +22,7 @@ type service struct {
 func New(a adding.Service, d deleting.Service, g getting.Service, u updating.Service) *service {
 	return &service{
 		app: &cli.App{
-			Name:  "Flash",
+			Name:  "flash",
 			Usage: "a cli flashcard app",
 			Flags: []cli.Flag{},
 			Commands: []*cli.Command{
@@ -43,13 +44,8 @@ func addCmd(a adding.Service) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			return addCard(ctx, a)
 		},
+		ArgsUsage: "[group]",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "group",
-				Aliases:  []string{"g"},
-				Usage:    "Flashcard's group",
-				Required: true,
-			},
 			&cli.StringFlag{
 				Name:     "title",
 				Aliases:  []string{"t"},
@@ -74,13 +70,8 @@ func deleteCmd(d deleting.Service) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			return deleteCard(ctx, d)
 		},
+		ArgsUsage: "[group]",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "group",
-				Aliases:  []string{"g"},
-				Usage:    "Flashcard's group",
-				Required: true,
-			},
 			&cli.StringFlag{
 				Name:     "title",
 				Aliases:  []string{"t"},
@@ -99,14 +90,7 @@ func getCmd(g getting.Service) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			return getCards(ctx, g)
 		},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "group",
-				Aliases:  []string{"g"},
-				Usage:    "Flashcard's group",
-				Required: true,
-			},
-		},
+		ArgsUsage: "[group]",
 	}
 }
 
@@ -118,13 +102,8 @@ func updateCmd(u updating.Service) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			return updateCard(ctx, u)
 		},
+		ArgsUsage: "[group]",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "group",
-				Aliases:  []string{"g"},
-				Usage:    "Flashcard's group",
-				Required: true,
-			},
 			&cli.StringFlag{
 				Name:     "title",
 				Aliases:  []string{"t"},
@@ -142,26 +121,49 @@ func updateCmd(u updating.Service) *cli.Command {
 }
 
 func addCard(ctx *cli.Context, a adding.Service) error {
+	group := groupFromArgs(ctx.Args())
+	items := strings.Split(ctx.String("t"), ".")
+	title := items[len(items)-1]
+	if len(items) > 1 {
+		if group != "" {
+			group += "."
+		}
+		group += strings.Join(items[:1], ".")
+	}
+
+	fmt.Println(group)
+
 	return a.AddCard(
-		ctx.String("g"),
+		group,
 		adding.Card{
-			Title: ctx.String("t"),
+			Title: title,
 			Desc:  ctx.String("d"),
 		},
 	)
 }
 
 func deleteCard(ctx *cli.Context, d deleting.Service) error {
+	group := groupFromArgs(ctx.Args())
+	items := strings.Split(ctx.String("t"), ".")
+	title := items[len(items)-1]
+	if len(items) > 1 {
+		if group != "" {
+			group += "."
+		}
+		group += strings.Join(items[:1], ".")
+	}
+
 	return d.DeleteCard(
-		ctx.String("g"),
+		group,
 		deleting.Card{
-			Title: ctx.String("t"),
+			Title: title,
 		},
 	)
 }
 
 func getCards(ctx *cli.Context, g getting.Service) error {
-	cards, err := g.GetCards(ctx.String("g"))
+	group := groupFromArgs(ctx.Args())
+	cards, err := g.GetCards(group)
 	for i, c := range cards {
 		fmt.Printf("\t%d) %s -> %s\n", i, c.Title, c.Desc)
 	}
@@ -169,11 +171,29 @@ func getCards(ctx *cli.Context, g getting.Service) error {
 }
 
 func updateCard(ctx *cli.Context, u updating.Service) error {
+	group := groupFromArgs(ctx.Args())
+	items := strings.Split(ctx.String("t"), ".")
+	title := items[len(items)-1]
+	if len(items) > 1 {
+		if group != "" {
+			group += "."
+		}
+		group += strings.Join(items[:1], ".")
+	}
+
 	return u.UpdateCard(
-		ctx.String("g"),
+		group,
 		updating.Card{
-			Title: ctx.String("t"),
+			Title: title,
 			Desc:  ctx.String("d"),
 		},
 	)
+}
+
+func groupFromArgs(a cli.Args) string {
+	var group string
+	if a.Len() == 1 {
+		group = a.First()
+	}
+	return group
 }

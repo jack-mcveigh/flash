@@ -12,8 +12,8 @@ Currently the Flash application is configured for In-Memory data storage and CLI
 
 >### Storage
 >
->1. In-Memory (default)
->2. JSON (TODO)
+>1. In-Memory
+>2. JSON (default)
 >
 >### Interface
 >
