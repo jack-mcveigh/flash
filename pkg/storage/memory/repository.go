@@ -28,13 +28,6 @@ func New() *repository {
 	return r
 }
 
-func getCardPath(g, t string) string {
-	if g == "" {
-		return t
-	}
-	return g + "." + t
-}
-
 func (r *repository) AddCard(g string, c adding.Card) error {
 	cardPath := getCardPath(g, c.Title)
 
@@ -124,4 +117,11 @@ func (r *repository) UpdateCard(g string, c updating.Card) error {
 		}
 	}
 	return ErrCardNotFound
+}
+
+func getCardPath(g, t string) string {
+	if g == "" {
+		return t
+	}
+	return g + "." + t
 }

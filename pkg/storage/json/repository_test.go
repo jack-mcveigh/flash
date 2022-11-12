@@ -25,18 +25,6 @@ type dbDriverStub struct {
 	cards []Card
 }
 
-func removeBaseCollection(coll string) string {
-	p := strings.Split(coll, "/")
-	return strings.Join(p[1:], ".")
-}
-
-func getCardPath(g, t string) string {
-	if g == "" {
-		return t
-	}
-	return g + "." + t
-}
-
 func (d *dbDriverStub) Write(collection string, resource string, v any) error {
 	switch val := v.(type) {
 	case Card:
@@ -122,6 +110,18 @@ func (d *dbDriverStub) Delete(collection string, resource string) error {
 		}
 	}
 	return errors.New("Resource not found")
+}
+
+func removeBaseCollection(coll string) string {
+	p := strings.Split(coll, "/")
+	return strings.Join(p[1:], ".")
+}
+
+func getCardPath(g, t string) string {
+	if g == "" {
+		return t
+	}
+	return g + "." + t
 }
 
 func newRepositoryWithDbAndClockStubs() (*repository, *dbDriverStub) {

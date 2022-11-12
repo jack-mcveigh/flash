@@ -24,13 +24,6 @@ var (
 	ErrGroupNotFound = errors.New("group not found")
 )
 
-func joinCollectionPaths(c1, c2 string) string {
-	if c1 == "" {
-		return c2
-	}
-	return c1 + "/" + strings.Replace(c2, ".", "/", -1)
-}
-
 type repository struct {
 	db    db.Driver
 	clock storage.Clock
@@ -44,20 +37,6 @@ func New() (*repository, error) {
 	db, err := db.New(dataPath)
 	c := storage.NewClock()
 	return &repository{db, c}, err
-}
-
-func (r *repository) checkCardExists(coll, title string) bool {
-	if err := r.db.Read(coll, title, &Card{}); err != nil {
-		return false
-	}
-	return true
-}
-
-func (r *repository) checkGroupExists(g string) bool {
-	if _, err := r.db.ReadAll(g); err != nil {
-		return false
-	}
-	return true
 }
 
 func (r *repository) AddCard(g string, c adding.Card) error {
@@ -158,4 +137,25 @@ func (r *repository) UpdateCard(g string, c updating.Card) error {
 	}
 
 	return r.db.Write(subCollection, u.Title, u)
+}
+
+func (r *repository) checkCardExists(coll, title string) bool {
+	if err := r.db.Read(coll, title, &Card{}); err != nil {
+		return false
+	}
+	return true
+}
+
+func (r *repository) checkGroupExists(g string) bool {
+	if _, err := r.db.ReadAll(g); err != nil {
+		return false
+	}
+	return true
+}
+
+func joinCollectionPaths(c1, c2 string) string {
+	if c1 == "" {
+		return c2
+	}
+	return c1 + "/" + strings.Replace(c2, ".", "/", -1)
 }
